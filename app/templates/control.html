@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>SynchroBots 제어 패널</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      padding: 14px 24px;
+      border-bottom: 1px solid rgba(148,163,184,0.5);
+      background: #020617;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .header-title { font-size: 20px; font-weight: 700; }
+    .header-sub { font-size: 12px; color: #9ca3af; }
+    .badge {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(56,189,248,0.6);
+      color: #7dd3fc;
+      background: rgba(8,47,73,0.7);
+    }
+
+    .content {
+      flex: 1;
+      padding: 18px 22px 22px;
+      display: grid;
+      grid-template-columns: 1.5fr 1.2fr;
+      gap: 18px;
+    }
+    .card {
+      background: #020617;
+      border-radius: 14px;
+      padding: 14px 16px 16px;
+      border: 1px solid rgba(148,163,184,0.4);
+      box-shadow: 0 18px 45px rgba(15,23,42,0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .card-title { font-size: 15px; font-weight: 600; }
+    .card-sub { font-size: 11px; color: #9ca3af; }
+
+    .section-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-size: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.1s ease;
+    }
+    button span.icon {
+      font-size: 14px;
+    }
+    button:active {
+      transform: translateY(1px);
+      box-shadow: none;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: #fee2e2;
+      box-shadow: 0 0 0 1px rgba(248,113,113,0.8), 0 6px 18px rgba(127,29,29,0.7);
+    }
+    .btn-danger:hover { background: #dc2626; }
+
+    .btn-primary {
+      background: #3b82f6;
+      color: #eff6ff;
+      box-shadow: 0 0 0 1px rgba(59,130,246,0.8), 0 6px 18px rgba(30,64,175,0.7);
+    }
+    .btn-primary:hover { background: #2563eb; }
+
+    .btn-outline {
+      background: transparent;
+      color: #e5e7eb;
+      border-radius: 999px;
+      box-shadow: 0 0 0 1px rgba(148,163,184,0.7);
+    }
+    .btn-outline:hover {
+      background: rgba(15,23,42,0.9);
+    }
+
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #9ca3af;
+    }
+    .status-row span.value {
+      color: #e5e7eb;
+      font-weight: 600;
+    }
+
+    /* 로그 영역 */
+    .log-box {
+      margin-top: 4px;
+      flex: 1;
+      border-radius: 10px;
+      background: #020617;
+      border: 1px solid rgba(55,65,81,0.9);
+      padding: 8px;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .log-line {
+      display: flex;
+      gap: 6px;
+      align-items: baseline;
+      color: #e5e7eb;
+    }
+    .log-time {
+      color: #9ca3af;
+      font-size: 10px;
+      min-width: 52px;
+    }
+    .log-tag {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(148,163,184,0.7);
+    }
+    .log-msg {
+      flex: 1;
+    }
+
+    .log-box-empty {
+      color: #6b7280;
+      font-size: 11px;
+      text-align: center;
+      padding: 18px 4px;
+    }
+
+    .log-footer-info {
+      margin-top: 6px;
+      font-size: 10px;
+      color: #6b7280;
+    }
+
+    @media (max-width: 960px) {
+      .content { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <div>
+        <div class="header-title">SynchroBots 제어 패널</div>
+        <div class="header-sub">Web → API → 장비 제어 (AGV · Robot · PLC)</div>
+      </div>
+      <span class="badge">CONTROL DEMO</span>
+    </header>
+
+    <main class="content">
+      <!-- 왼쪽: 제어 섹션들 -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-title">장비 제어</div>
+          <div class="card-sub">긴급 정지, 초기화, PLC 출력 제어</div>
+        </div>
+
+        <div class="section-grid">
+          <!-- AGV 제어 -->
+          <div>
+            <div class="status-row">
+              <span>AGV 제어</span>
+              <span class="value" id="agv-status">AGV #01 · RUN</span>
+            </div>
+            <div class="btn-row">
+              <button class="btn-danger"
+                      data-target="AGV"
+                      data-action="ESTOP">
+                <span class="icon">⛔</span> 긴급 정지 (E-Stop)
+              </button>
+              <button class="btn-outline"
+                      data-target="AGV"
+                      data-action="RESUME">
+                <span class="icon">▶</span> 운행 재개
+              </button>
+            </div>
+          </div>
+
+          <!-- Robot 제어 -->
+          <div>
+            <div class="status-row">
+              <span>RobotArm 제어</span>
+              <span class="value" id="robot-status">Robot #01 · READY</span>
+            </div>
+            <div class="btn-row">
+              <button class="btn-primary"
+                      data-target="ROBOT"
+                      data-action="HOME">
+                <span class="icon">🏠</span> 홈 포지션 복귀
+              </button>
+              <button class="btn-outline"
+                      data-target="ROBOT"
+                      data-action="PAUSE">
+                <span class="icon">⏸</span> 일시 정지
+              </button>
+            </div>
+          </div>
+
+          <!-- PLC 제어 -->
+          <div>
+            <div class="status-row">
+              <span>PLC 출력 제어</span>
+              <span class="value" id="plc-status">CONV #02 · OFF</span>
+            </div>
+            <div class="btn-row">
+              <button class="btn-primary"
+                      data-target="PLC"
+                      data-action="OUTPUT_ON"
+                      data-extra='{"coil":"Y002"}'>
+                <span class="icon">🔌</span> 출력 ON (Y002)
+              </button>
+              <button class="btn-outline"
+                      data-target="PLC"
+                      data-action="OUTPUT_OFF"
+                      data-extra='{"coil":"Y002"}'>
+                <span class="icon">💤</span> 출력 OFF (Y002)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="log-footer-info">
+          ※ 실제 연동 시, 각 버튼 → API 엔드포인트(`/api/v1/control/...`)로 매핑하여 사용
+        </div>
+      </section>
+
+      <!-- 오른쪽: 제어 로그 -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-title">제어 명령 로그</div>
+          <div class="card-sub">Web → API로 보낸 명령 이력</div>
+        </div>
+
+        <div id="log-box" class="log-box">
+          <div class="log-box-empty">아직 전송된 제어 명령이 없습니다.</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const logBox = document.getElementById("log-box");
+
+    function appendLog(target, action, ok = true) {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, "0");
+      const mm = String(now.getMinutes()).padStart(2, "0");
+      const ss = String(now.getSeconds()).padStart(2, "0");
+      const time = `${hh}:${mm}:${ss}`;
+
+      if (logBox.querySelector(".log-box-empty")) {
+        logBox.innerHTML = "";
+      }
+
+      const line = document.createElement("div");
+      line.className = "log-line";
+
+      const spanTime = document.createElement("span");
+      spanTime.className = "log-time";
+      spanTime.textContent = time;
+
+      const spanTag = document.createElement("span");
+      spanTag.className = "log-tag";
+      spanTag.textContent = ok ? `${target}` : `${target} ERR`;
+
+      const spanMsg = document.createElement("span");
+      spanMsg.className = "log-msg";
+      spanMsg.textContent = ok
+        ? `${action} 명령 전송 완료`
+        : `${action} 명령 전송 실패`;
+
+      line.appendChild(spanTime);
+      line.appendChild(spanTag);
+      line.appendChild(spanMsg);
+      logBox.prepend(line);
+    }
+
+    async function sendCommand(target, action, extra = {}) {
+      // 실제 API 엔드포인트 예시 (Flask에서 구현 예정)
+      // 필요한 구조에 맞게 URL/Body 수정하면 됨
+      const urlMap = {
+        AGV: "/api/v1/control/agv",
+        ROBOT: "/api/v1/control/robot",
+        PLC: "/api/v1/control/plc",
+      };
+      const url = urlMap[target] || "/api/v1/control/unknown";
+
+      const payload = { action, ...extra };
+
+      try {
+        // 실제 연결 시 주석 해제
+        /*
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        */
+        appendLog(target, action, true);
+      } catch (e) {
+        appendLog(target, action, false);
+        console.error(e);
+      }
+    }
+
+    // 버튼 이벤트 바인딩
+    document.querySelectorAll("button[data-target]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const target = btn.getAttribute("data-target");
+        const action = btn.getAttribute("data-action");
+        const extraRaw = btn.getAttribute("data-extra");
+        let extra = {};
+        if (extraRaw) {
+          try { extra = JSON.parse(extraRaw); } catch (e) {}
+        }
+        sendCommand(target, action, extra);
+      });
+    });
+  </script>
+</body>
+</html>

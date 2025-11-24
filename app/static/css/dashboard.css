@@ -1,0 +1,407 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  background: #0f172a;
+  color: #e5e7eb;
+}
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 헤더 */
+
+.header {
+  padding: 14px 24px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.4);
+  background: #020617;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.header-title {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.header-sub {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.badge {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(56, 189, 248, 0.6);
+  color: #7dd3fc;
+  background: rgba(8, 47, 73, 0.7);
+}
+
+/* 메인 레이아웃 */
+
+.content {
+  flex: 1;
+  padding: 18px 22px 22px;
+  display: grid;
+  grid-template-columns: 1.8fr 1.2fr;
+  gap: 18px;
+}
+
+/* 카드 공통 */
+
+.card {
+  background: #020617;
+  border-radius: 14px;
+  padding: 12px 14px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.card-sub {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.pill {
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  color: #9ca3af;
+}
+
+/* 좌측/우측 컬럼 */
+
+.left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* AGV 맵 */
+
+.card-map {
+  min-height: 500px;
+}
+
+.agv-map {
+  margin-top: 4px;
+  flex: 1;
+  border-radius: 12px;
+  background: radial-gradient(circle at top left, #1d4ed8 0, #020617 55%);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.map-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+      to right,
+      rgba(148, 163, 184, 0.08) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+.agv-path {
+  position: absolute;
+  inset: 14px 20px 20px 20px;
+  border-radius: 10px;
+  border: 1px dashed rgba(148, 163, 184, 0.6);
+}
+
+.agv-node {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.25);
+}
+
+.agv-node.checkpoint {
+  background: #eab308;
+  box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.25);
+}
+
+.agv-node.error {
+  background: #ef4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.3);
+}
+
+.agv-label {
+  position: absolute;
+  font-size: 11px;
+  color: #e5e7eb;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 2px 5px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  transform: translateY(-140%);
+}
+
+/* 칩, 상태 리스트 */
+
+.chip-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.chip {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  color: #9ca3af;
+}
+
+.status-list {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 6px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(55, 65, 81, 0.9);
+}
+
+.status-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.dot.green {
+  background: #22c55e;
+}
+
+.dot.yellow {
+  background: #eab308;
+}
+
+.dot.red {
+  background: #ef4444;
+}
+
+.status-value {
+  font-weight: 600;
+  font-size: 11px;
+}
+
+/* 미션 카드 */
+
+.card-mission {
+  min-height: 150px;
+  max-height: 190px;
+  overflow-y: auto;
+}
+
+.mission-list {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 11px;
+}
+
+.mission-item {
+  padding: 6px 7px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mission-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mission-id {
+  font-weight: 600;
+}
+
+.mission-meta {
+  color: #9ca3af;
+  font-size: 10px;
+}
+
+.status-pill {
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.status-running {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.7);
+}
+
+.status-done {
+  background: rgba(34, 197, 94, 0.15);
+  color: #86efac;
+  border: 1px solid rgba(34, 197, 94, 0.6);
+}
+
+.status-error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fecaca;
+  border: 1px solid rgba(239, 68, 68, 0.7);
+}
+
+/* 요약 차트 */
+
+.card-summary {
+  min-height: 140px;
+}
+
+.chart-col {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.chart-box {
+  padding: 4px;
+}
+
+.chart-caption {
+  margin-bottom: 2px;
+}
+
+/* 로그 테이블 공통 */
+
+.log-table {
+  margin-top: 6px;
+  font-size: 11px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(55, 65, 81, 0.9);
+}
+
+/* 로그 내용이 길어질 때 스크롤 */
+.card-events .log-table,
+.card-control .log-table {
+  max-height: 150px;   /* 필요하면 160~180 정도로 조정 */
+  overflow-y: auto;
+}
+
+.log-header,
+.log-row {
+  display: grid;
+  grid-template-columns: 70px 60px 1fr;
+  align-items: center;
+  padding: 4px 8px;
+}
+
+.log-header {
+  background: #020617;
+  font-weight: 600;
+  color: #9ca3af;
+  border-bottom: 1px solid rgba(55, 65, 81, 0.9);
+}
+
+.log-row:nth-child(odd) {
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.log-row:nth-child(even) {
+  background: rgba(15, 23, 42, 0.7);
+}
+
+.log-level {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  text-align: center;
+}
+
+.lvl-info {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.7);
+}
+
+.lvl-warn {
+  background: rgba(234, 179, 8, 0.15);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.7);
+}
+
+.lvl-err {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fecaca;
+  border: 1px solid rgba(239, 68, 68, 0.7);
+}
+
+.log-tag {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  margin-right: 6px;
+}
+
+/* 반응형 */
+
+@media (max-width: 1080px) {
+  .content {
+    grid-template-columns: 1fr;
+  }
+}
