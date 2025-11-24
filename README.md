@@ -6,14 +6,12 @@
 #가상환경 구축 및 실행
 
 python -m venv myenv
-
 myenv\Scripts\activate
 
 
 #requirements 적용
 
 pip install --upgrade pip
-
 pip install -r SynchroBots_WEB/requirements.txt
 
 
