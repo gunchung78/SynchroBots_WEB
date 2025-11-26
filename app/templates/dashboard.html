@@ -36,10 +36,15 @@
               <div class="card-title">AGV 네비게이션 맵</div>
               <div class="card-sub">경로 · 체크포인트 · 현재 위치 · 이탈 지점</div>
             </div>
+            <!-- AGV 네비게이션 맵 카드 내부 -->
+
             <span class="pill">Layer: map / path / robot</span>
           </div>
 
           <div class="agv-map">
+            <div class="agv-map-wrap">
+              <div class="agv-map-bg" id="agv-map-bg"></div>
+            </div>
             <div class="map-grid"></div>
             <div class="agv-path">
               <!-- 체크포인트 예시 -->
@@ -89,23 +94,6 @@
             </div>
           </div>
         </section>
-
-        <!-- 미션 / 작업 로그 카드 -->
-        <section class="card card-mission">
-          <div class="card-header">
-            <div>
-              <div class="card-title">미션 · 작업 로그 (mission_logs)</div>
-              <div class="card-sub">진행 중 / 최근 완료된 미션 현황</div>
-            </div>
-            <span class="pill">최근 5건</span>
-          </div>
-
-          <div class="mission-list" id="mission-list"></div>
-        </section>
-      </section>
-
-      <!-- 우측 컬럼: 차트 + 이벤트 로그 + 제어 로그 -->
-      <section class="right-column">
         <!-- 요약 차트 -->
         <section class="card card-summary">
           <div class="card-header">
@@ -126,6 +114,24 @@
               <canvas id="successChart" height="100"></canvas>
             </div>
           </div>
+        </section>
+        
+      </section>
+
+      <!-- 우측 컬럼: 차트 + 이벤트 로그 + 제어 로그 -->
+      <section class="right-column">
+
+        <!-- 미션 / 작업 로그 카드 -->
+        <section class="card card-mission">
+          <div class="card-header">
+            <div>
+              <div class="card-title">미션 · 작업 로그 (mission_logs)</div>
+              <div class="card-sub">진행 중 / 최근 완료된 미션 현황</div>
+            </div>
+            <span class="pill">최근 5건</span>
+          </div>
+
+          <div class="mission-list" id="mission-list"></div>
         </section>
 
         <!-- 이벤트 로그 -->
@@ -171,6 +177,23 @@
 
   <!-- JS: Mock 데이터 + 렌더링 -->
   <script>
+    function refreshAgvMap() {
+      const el = document.getElementById("agv-map-bg");
+      if (!el) return;
+
+      const ts = Date.now(); // 캐시 방지용
+      el.style.backgroundImage = `url("/api/v1/map-image?t=${ts}")`;
+    }
+
+    // 페이지 로드 시 한 번 호출
+    document.addEventListener("DOMContentLoaded", () => {
+      refreshAgvMap();
+
+      // 필요하면 주기적으로 맵 새로고침 (예: 5초마다)
+      // setInterval(refreshAgvMap, 5000);
+    });
+
+
     // ==============================
     // 1. Mock 데이터 (나중에 Flask에서 DB 연동 시 교체)
     // ==============================

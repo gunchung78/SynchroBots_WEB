@@ -12,6 +12,5 @@ app = create_app()
 # 간단한 상태 저장(선택)
 last_triggers = []
 
-
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=True)
+    app.run(host="0.0.0.0", port=80, debug=True, use_reloader=True)

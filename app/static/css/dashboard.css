@@ -49,12 +49,29 @@ body {
 
 /* 메인 레이아웃 */
 
-.content {
+/* .content {
   flex: 1;
   padding: 18px 22px 22px;
   display: grid;
   grid-template-columns: 1.8fr 1.2fr;
   gap: 18px;
+} */
+.content {
+  flex: 1;
+  padding: 18px 22px 22px;
+  display: grid;
+
+  /* 1열: 고정 폭(AGV 맵 카드), 2열: 남는 영역 */
+  grid-template-columns: 640px minmax(360px, 1fr);
+
+  gap: 18px;
+
+  /* 전체를 가운데로 모아주기 (양옆 여백 균등) */
+  /* justify-content: center; */
+
+  /* 너무 넓은 모니터에서 가운데로 묶기 */
+  /* max-width: 100%; */
+  /* margin: 0 auto; */
 }
 
 /* 카드 공통 */
@@ -100,6 +117,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  /* max-width: 640px; */
 }
 
 .right-column {
@@ -108,25 +126,50 @@ body {
   gap: 14px;
 }
 
-/* AGV 맵 */
+/* === AGV 맵 고정 캔버스 설정 === */
 
+/* 카드 안에서 가운데 정렬 */
 .card-map {
-  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
+/* 고정 사이즈 캔버스: 여기 크기를 좌표계 기준으로 사용 */
 .agv-map {
-  margin-top: 4px;
-  flex: 1;
+  position: relative;
+  width: 600px;   /* 🔧 원하는 기준 사이즈 */
+  height: 400px;  /* 🔧 위와 세트로 맞춰주면 됨 */
+  margin: 4px auto 0;  /* 가운데 정렬 */
   border-radius: 12px;
   background: radial-gradient(circle at top left, #1d4ed8 0, #020617 55%);
   border: 1px solid rgba(59, 130, 246, 0.4);
-  position: relative;
   overflow: hidden;
+  flex: 0 0 auto;  /* 화면이 줄어도 이 크기 유지 */
 }
 
+/* 맵 이미지 영역: 고정 캔버스 안을 100% 채우도록 */
+.agv-map-wrap {
+  position: absolute;
+  inset: 14px 20px 20px 20px;  /* 안쪽 여백은 그대로 사용 */
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.agv-map-bg {
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  background-color: #cfcfcf;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: contain;
+}
+
+/* 그리드/경로도 동일 캔버스 기준으로 */
 .map-grid {
   position: absolute;
-  inset: 0;
+  inset: 14px 20px 20px 20px;
   background-image: linear-gradient(
       to right,
       rgba(148, 163, 184, 0.08) 1px,
@@ -134,11 +177,34 @@ body {
     ),
     linear-gradient(to bottom, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
   background-size: 26px 26px;
+  border-radius: 4px;
+}
+
+/* 대시보드 map */
+/* 맵 전체를 감싸는 영역 (카드 안) */
+.agv-map-wrap {
+  width: 93%;
+  /* 카드 높이 비율: 화면 높이의 55~70% 정도에서 맞춰서 써보세요 */
+  box-sizing: border-box;
+}
+
+/* 실제 맵이 그려질 캔버스 */
+.agv-map-bg {
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+
+  /* 핵심: 배경 이미지를 가운데에, 비율 유지하면서 맞추기 */
+  background-color: #cfcfcf;        /* 맵 바깥 회색 배경 */
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: contain;         /* 전체 지도가 보이게 */
+  /* 만약 카드 꽉 채우고 가장자리는 잘려도 되면 contain 대신 cover */
 }
 
 .agv-path {
   position: absolute;
-  inset: 14px 20px 20px 20px;
+  inset: 14px 20px 20px 20px;  /* map-grid랑 같은 영역 */
   border-radius: 10px;
   border: 1px dashed rgba(148, 163, 184, 0.6);
 }
@@ -405,3 +471,4 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
