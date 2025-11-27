@@ -407,12 +407,44 @@ body {
   overflow-y: auto;
 }
 
+
 .log-header,
 .log-row {
   display: grid;
   grid-template-columns: 70px 60px 1fr;
   align-items: center;
   padding: 4px 8px;
+}
+
+.log-header{
+  text-align: center;
+}
+
+/* 제어 로그 테이블 전용 컬럼 너비 조정 */
+.card-control .log-header,
+.card-control .log-row {
+  grid-template-columns: 70px 110px 90px 70px 1fr;
+  
+}
+
+.log-header,
+.log-row {
+  display: grid;
+  /* 이벤트용 기본 3열, 제어는 밑에서 오버라이드 */
+  grid-template-columns: 70px 60px 1fr;
+  align-items: center;
+  padding: 4px 8px;
+}
+
+/* 헤더를 스크롤 컨테이너 상단에 고정 */
+.log-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #020617; /* 카드 배경이랑 동일하게 */
+  font-weight: 600;
+  color: #9ca3af;
+  border-bottom: 1px solid rgba(55, 65, 81, 0.9);
 }
 
 .log-header {

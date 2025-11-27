@@ -1,35 +1,27 @@
 # app/api/v1/dashboard_api.py
 
-from flask import Blueprint, jsonify, send_file
-from sqlalchemy import text
-from app.utils.db import db
+from flask import Blueprint, jsonify, send_file, request
+from sqlalchemy import text, desc
+from app import db
+
+from app.models.dashboard import ControlLog
 
 from PIL import Image
 import numpy as np
-import io, os
+import io
+import os
 
-api_dashboard_bp = Blueprint("api_dashboard", __name__)
-
-# === DB 연결 체크 ===
-@api_dashboard_bp.route("/ping-db", methods=["GET"])
-def ping_db():
-    try:
-        result = db.session.execute(text("SELECT 1 AS ok")).scalar()
-        return jsonify({"db_ok": bool(result)}), 200
-    except Exception as e:
-        return jsonify({"db_ok": False, "error": str(e)}), 500
-
+dashboard_api_bp = Blueprint("dashboard_api", __name__)
 
 # === AGV 맵 이미지 제공 ===
 
-# SynchroBots_web/ 기준으로 data/maps/ 경로 잡기
 BASE_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "../../..")
 )
 MAP_DIR = os.path.join(BASE_DIR, "data", "maps")
 
 
-@api_dashboard_bp.route("/map-image", methods=["GET"])
+@dashboard_api_bp.route("/map-image", methods=["GET"])
 def map_image():
     pgm_path = os.path.join(MAP_DIR, "map.pgm")
 
@@ -39,9 +31,8 @@ def map_image():
     img = Image.open(pgm_path).convert("L")
     arr = np.array(img)
 
-    UNKNOWN = 205  # 필요시 조정
+    UNKNOWN = 205
 
-    # 1) unknown(205) 제외한 픽셀만 bbox 대상으로 사용
     mask = arr != UNKNOWN
     coords = np.argwhere(mask)
 
@@ -62,13 +53,33 @@ def map_image():
 
     cropped = img.crop((x_min, y_min, x_max, y_max))
 
-    # 필요하면 여기서 2배 확대도 가능
-    # cropped = cropped.resize(
-    #     (cropped.width * 2, cropped.height * 2),
-    #     Image.NEAREST
-    # )
-
     buf = io.BytesIO()
     cropped.save(buf, format="PNG")
     buf.seek(0)
     return send_file(buf, mimetype="image/png")
+
+
+# === Control Logs (제어 명령 로그) ===
+
+def _get_limit(default=10, max_limit=100):
+    try:
+        limit = int(request.args.get("limit", default))
+    except (TypeError, ValueError):
+        return default
+    return max(1, min(limit, max_limit))
+
+
+@dashboard_api_bp.route("/control-logs", methods=["GET"])
+def get_control_logs():
+    limit = _get_limit(default=10)
+
+    logs = (
+        ControlLog.query
+        .order_by(desc(ControlLog.created_at))
+        .limit(limit)
+        .all()
+    )
+
+    return jsonify({
+        "items": [log.to_dict() for log in logs]
+    })
