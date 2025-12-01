@@ -70,6 +70,23 @@ class ControlLog(db.Model):
             ),
             "equipment": self.equipment.to_dict() if self.equipment else None
         }
+    
+
+class EventLog(db.Model):
+    __tablename__ = "events_logs"
+
+    event_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    equipment_id = db.Column(
+        db.String(32),
+        db.ForeignKey("equipment_info.equipment_id"),
+        nullable=False,
+    )
+    equipment_type = db.Column(db.String(16), nullable=False)
+    level = db.Column(db.String(8), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False)
+
+    equipment = db.relationship("EquipmentInfo", backref="events_logs")
 
 
 class EquipmentInfo(db.Model):

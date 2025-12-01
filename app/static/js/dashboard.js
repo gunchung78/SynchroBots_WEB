@@ -3,14 +3,14 @@ function refreshAgvMap() {
   if (!el) return;
 
   const ts = Date.now();
-  el.style.backgroundImage = `url("/api/v1/map-image?t=${ts}")`;
+  el.style.backgroundImage = `url("/api/v1/dashboard/map-image?t=${ts}")`;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   refreshAgvMap();
   initCharts();
   renderMissions();
-  renderEvents();
+  loadEvents();
   loadControlLogs();
 });
 
@@ -178,48 +178,78 @@ function createEventRow(e) {
   const row = document.createElement("div");
   row.className = "log-row";
 
+  // 1) 시간
   const colTime = document.createElement("span");
-  colTime.textContent = e.time;
+  const timeStr = e.created_at ? e.created_at.slice(11, 19) : "";
+  colTime.textContent = timeStr;
 
+  // 2) 장비 (이름 우선, 없으면 ID)
   const colDevice = document.createElement("span");
-  colDevice.textContent = e.device_id;
+  let label = e.equipment_id || "-";
+  if (e.equipment && e.equipment.equipment_name) {
+    label = e.equipment.equipment_name;
+  }
+  colDevice.textContent = label;
 
-  const colMsg = document.createElement("span");
+  // 3) TYPE (AGV / ARM / PLC / HMI)
+  const colType = document.createElement("span");
+  const typeSpan = document.createElement("span");
+  typeSpan.className = "log-tag";          // 타입 칩 스타일 주고 싶으면 CSS에서 .log-tag 재사용
+  typeSpan.textContent = e.equipment_type || "";
+  colType.appendChild(typeSpan);
 
-  const tag = document.createElement("span");
-  tag.className = "log-tag";
-  tag.textContent = e.device_type;
-
-  const level = document.createElement("span");
-  level.className =
+  // 4) LEVEL (INFO / WARN / ERR)
+  const colLevel = document.createElement("span");
+  const levelSpan = document.createElement("span");
+  const level = e.level || "INFO";
+  levelSpan.className =
     "log-level " +
-    (e.level === "ERR"
+    (level === "ERR"
       ? "lvl-err"
-      : e.level === "WARN"
+      : level === "WARN"
       ? "lvl-warn"
       : "lvl-info");
-  level.textContent = e.level;
+  levelSpan.textContent = level;
+  colLevel.appendChild(levelSpan);
 
-  const text = document.createElement("span");
-  text.textContent = "  " + e.message;
+  // 5) 내용 (message)
+  const colMsg = document.createElement("span");
+  colMsg.textContent = e.message || "";
 
-  colMsg.appendChild(tag);
-  colMsg.appendChild(level);
-  colMsg.appendChild(text);
+  // 순서대로 5개 컬럼 추가
+  row.appendChild(colTime);   // 시간
+  row.appendChild(colDevice); // 장비
+  row.appendChild(colType);   // TYPE
+  row.appendChild(colLevel);  // LEVEL
+  row.appendChild(colMsg);    // 내용
 
-  row.appendChild(colTime);
-  row.appendChild(colDevice);
-  row.appendChild(colMsg);
   return row;
 }
 
-function renderEvents() {
+async function loadEvents() {
   const eventsTable = document.getElementById("events-table");
   if (!eventsTable) return;
 
-  eventLogs.forEach(e => {
-    eventsTable.appendChild(createEventRow(e));
-  });
+  // 헤더를 제외하고 기존 행 제거
+  while (eventsTable.children.length > 1) {
+    eventsTable.removeChild(eventsTable.lastChild);
+  }
+
+  try {
+    const res = await fetch("/api/v1/dashboard/events_logs?limit=10");
+    if (!res.ok) {
+      console.error("failed to fetch events", res.status);
+      return;
+    }
+    const data = await res.json();
+    const items = data.items || [];
+
+    items.forEach(ev => {
+      eventsTable.appendChild(createEventRow(ev));
+    });
+  } catch (err) {
+    console.error("error loading events", err);
+  }
 }
 
 // -------------------- 제어 로그(API) --------------------
@@ -296,7 +326,7 @@ async function loadControlLogs() {
   }
 
   try {
-    const res = await fetch("/api/v1/control-logs?limit=10");
+    const res = await fetch("/api/v1/dashboard/control_logs?limit=10");
     if (!res.ok) {
       console.error("failed to fetch control-logs", res.status);
       return;

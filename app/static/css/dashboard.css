@@ -427,6 +427,14 @@ body {
   
 }
 
+/* 이벤트 로그 테이블 전용 컬럼 너비 조정 */
+.card-events .log-header,
+.card-events .log-row {
+  grid-template-columns: 70px 110px 60px 60px  1fr;
+  
+}
+
+
 .log-header,
 .log-row {
   display: grid;

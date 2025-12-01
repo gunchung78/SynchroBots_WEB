@@ -19,8 +19,8 @@ async def main():
         # 서버로부터 데이터를 '받아올' 노드 탐색
         read_node = await client.nodes.root.get_child([
             "0:Objects",
-            f"{idx}:MyObject",
-            f"{idx}:ClientB_Read_Data"  # 구독 전용 노드
+            f"{idx}:PLC",
+            f"{idx}:read_conveyor_sensor_check"  # 구독 전용 노드
         ])
         print(f"구독 노드 ID 획득 성공: {read_node}")
         # 4. 구독 설정
