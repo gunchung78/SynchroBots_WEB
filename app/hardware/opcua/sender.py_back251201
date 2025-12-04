@@ -1,0 +1,222 @@
+# app/hardware/opcua/sender.py
+import asyncio
+import json
+from asyncua import Client, ua  # ua 추가
+from .config import OPCUA_SERVER_URL, OPCUA_NAMESPACE_URI
+
+# ==============================================================
+# AMR
+# ==============================================================
+AMR_NODE_ID = "ns=2;i=1"   # 예시: AMR Object 노드
+AMR_GO_MOVE_METHOD_NODE_ID = "ns=2;i=10"   # 예시: write_amr_go_move 메서드 노드
+
+# AMR 이동명령
+async def _write_amr_go_move_async(payload: dict):
+    client = Client(url=OPCUA_SERVER_URL)
+
+    try:
+        await client.connect()
+        print("[OPCUA] connected for AMR go_move (Method call)")
+
+        # (1) 네임스페이스 인덱스는 필요하면 사용
+        idx = await client.get_namespace_index(OPCUA_NAMESPACE_URI)
+        print(f"[OPCUA] namespace index = {idx}")
+
+        # (2) Method 호출 대상 Object / Method 노드 가져오기
+        obj_node = client.get_node(AMR_NODE_ID)
+        method_node = client.get_node(AMR_GO_MOVE_METHOD_NODE_ID)
+        print(f"[OPCUA] obj_node    = {obj_node}")
+        print(f"[OPCUA] method_node = {method_node}")
+
+        # (3) 인자 구성
+        # 담당자랑 합의된 시그니처에 맞춰서 Variant 작성
+        # 예) 서버쪽 Method 인자: (String json_command)
+        json_str = json.dumps(payload, ensure_ascii=False)
+        arguments = [
+            ua.Variant(json_str, ua.VariantType.String)
+        ]
+
+        print(f"[OPCUA] calling method with args = {json_str}")
+
+        # (4) Method 호출
+        result = await obj_node.call_method(method_node, *arguments)
+
+        # 서버 쪽에서 (bool, string) 튜플을 돌려준다고 가정
+        #   e.g. (True, "OK") / (False, "some error")
+        try:
+            is_success, status_message = result
+            print(f"[OPCUA] method call result: success={is_success}, msg='{status_message}'")
+        except Exception:
+            # 반환 형식이 다르면 그냥 raw 출력
+            print(f"[OPCUA] method call raw result: {result}")
+
+    except Exception as e:
+        print(f"[OPCUA] write_amr_go_move error: {e}")
+        # 필요하면 여기서 raise 해서 API까지 에러 전파
+        raise
+    finally:
+        try:
+            await client.disconnect()
+        except Exception:
+            pass
+        print("[OPCUA] disconnected (AMR go_move)")
+
+
+def write_amr_go_move(payload: dict):
+    """
+    동기 컨텍스트(Flask API 등)에서 호출할 래퍼.
+    내부에서는 async Method 호출을 수행.
+    """
+    asyncio.run(_write_amr_go_move_async(payload))
+
+
+# AMR 운송 시작(운송물품 JSON으로 전달)
+async def _write_amr_go_positions_async(payload: dict):
+    client = Client(url=OPCUA_SERVER_URL)
+
+    try:
+        await client.connect()
+        print("[OPCUA] connected for AMR go_positions")
+
+        idx = await client.get_namespace_index(OPCUA_NAMESPACE_URI)
+
+        write_node = await client.nodes.root.get_child([
+            "0:Objects",
+            f"{idx}:AMR",
+            f"{idx}:write_amr_go_positions",
+        ])
+
+        json_str = json.dumps(payload, ensure_ascii=False)
+        print(f"[OPCUA] write target = {write_node}")
+        print(f"[OPCUA] writing JSON = {json_str}")
+
+        await write_node.write_value(json_str)
+
+    finally:
+        try:
+            await client.disconnect()
+        except Exception:
+            pass
+        print("[OPCUA] disconnected (AMR go_positions)")
+
+
+def write_amr_go_positions(payload: dict):
+
+    asyncio.run(_write_amr_go_positions_async(payload))
+
+# ==============================================================
+# ARM
+# ==============================================================
+
+
+# ARM 이동명령 
+# "go_home"(초기위치 이동),
+# "mission_start" (센서 체크시 - 작업실행),
+# "stop" (정지)
+async def _write_arm_go_move_async(payload: dict):
+
+    client = Client(url=OPCUA_SERVER_URL)
+
+    try:
+        await client.connect()
+        print("[OPCUA] connected for ARM go_move")
+
+        idx = await client.get_namespace_index(OPCUA_NAMESPACE_URI)
+
+        write_node = await client.nodes.root.get_child([
+            "0:Objects",
+            f"{idx}:InterfaceDataNodes",
+            f"{idx}:write_arm_go_move",
+        ])
+
+        json_str = json.dumps(payload, ensure_ascii=False)
+        print(f"[OPCUA] write target = {write_node}")
+        print(f"[OPCUA] writing JSON = {json_str}")
+
+        await write_node.write_value(json_str)
+
+    finally:
+        try:
+            await client.disconnect()
+        except Exception:
+            pass
+        print("[OPCUA] disconnected (ARM go_move)")
+
+
+def write_arm_go_move(payload: dict):
+    asyncio.run(_write_arm_go_move_async(payload))
+
+
+# ==============================================================
+# PLC
+# ==============================================================
+
+# 컨베이어 센서 체크 후 Anomaly 체크 값 전달
+async def _write_ok_ng_value(payload: dict):
+
+    client = Client(url=OPCUA_SERVER_URL)
+
+    try:
+        await client.connect()
+        print("[OPCUA] connected for PLC ok_ng_value")
+
+        idx = await client.get_namespace_index(OPCUA_NAMESPACE_URI)
+
+        write_node = await client.nodes.root.get_child([
+            "0:Objects",
+            f"{idx}:PLC",
+            f"{idx}:write_ok_ng_value",
+        ])
+
+        json_str = json.dumps(payload, ensure_ascii=False)
+        print(f"[OPCUA] write target = {write_node}")
+        print(f"[OPCUA] writing JSON = {json_str}")
+
+        await write_node.write_value(json_str)
+
+    finally:
+        try:
+            await client.disconnect()
+        except Exception:
+            pass
+        print("[OPCUA] disconnected (PLC ok_ng_value)")
+
+
+def write_ok_ng_value(payload: dict):
+    asyncio.run(_write_ok_ng_value(payload))
+
+
+# PLC 동작 명령
+# 현재는 컨베이러 동작 "state": "c_move"
+async def _write_ready_state(payload: dict):
+
+    client = Client(url=OPCUA_SERVER_URL)
+
+    try:
+        await client.connect()
+        print("[OPCUA] connected for PLC ready_state")
+
+        idx = await client.get_namespace_index(OPCUA_NAMESPACE_URI)
+
+        write_node = await client.nodes.root.get_child([
+            "0:Objects",
+            f"{idx}:PLC",
+            f"{idx}:write_ready_state",
+        ])
+
+        json_str = json.dumps(payload, ensure_ascii=False)
+        print(f"[OPCUA] write target = {write_node}")
+        print(f"[OPCUA] writing JSON = {json_str}")
+
+        await write_node.write_value(json_str)
+
+    finally:
+        try:
+            await client.disconnect()
+        except Exception:
+            pass
+        print("[OPCUA] disconnected (PLC ready_state)")
+
+
+def write_ready_state(payload: dict):
+    asyncio.run(_write_ready_state(payload))

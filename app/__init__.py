@@ -25,10 +25,19 @@ def create_app():
      # ───────── Web UI Blueprints ──────
     from app.web.dashboard import dashboard_bp
     app.register_blueprint(dashboard_bp)
+    from app.web.vision import vision_bp
+    app.register_blueprint(vision_bp, url_prefix="/vision")
 
     # ───────── API Blueprints ─────────
     from app.api.v1.plc_api import plc_api_bp
-    app.register_blueprint(plc_api_bp, url_prefix="/api/v1/plc")        
+    app.register_blueprint(plc_api_bp, url_prefix="/api/v1/plc")      
+    from app.api.v1.amr_api import amr_api_bp
+    app.register_blueprint(amr_api_bp, url_prefix="/api/v1/amr")     
+    from app.api.v1.arm_api import arm_api_bp
+    app.register_blueprint(arm_api_bp, url_prefix="/api/v1/arm")     
+    from app.api.v1.vision_api import vision_api_bp
+    app.register_blueprint(vision_api_bp, url_prefix="/api/v1/vision")     
+
 
     from app.api.v1.dashboard_api import dashboard_api_bp
     app.register_blueprint(dashboard_api_bp, url_prefix="/api/v1/dashboard")

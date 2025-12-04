@@ -42,20 +42,7 @@
             </div>
             <div class="map-grid"></div>
             <div class="agv-path">
-              <!-- 체크포인트 예시 -->
-              <div class="agv-node checkpoint" style="left: 14%; top: 16%;"></div>
-              <div class="agv-node checkpoint" style="left: 36%; top: 44%;"></div>
-              <div class="agv-node checkpoint" style="left: 64%; top: 28%;"></div>
 
-              <!-- 현재 AGV 위치 -->
-              <div class="agv-node" style="left: 52%; top: 62%;">
-                <div class="agv-label">AGV #01</div>
-              </div>
-
-              <!-- 네비 이탈 지점 예시 -->
-              <div class="agv-node error" style="left: 78%; top: 76%;">
-                <div class="agv-label">Out of Route</div>
-              </div>
             </div>
           </div>
 
@@ -65,28 +52,8 @@
             <span class="chip">예상 도착: 02:13</span>
           </div>
 
-          <div class="status-list">
-            <div class="status-item">
-              <div class="status-label">
-                <span class="dot green"></span>
-                <span>AGV #01 상태</span>
-              </div>
-              <div class="status-value">정상 주행</div>
-            </div>
-            <div class="status-item">
-              <div class="status-label">
-                <span class="dot yellow"></span>
-                <span>AGV #02 상태</span>
-              </div>
-              <div class="status-value">대기 · ZONE-B</div>
-            </div>
-            <div class="status-item">
-              <div class="status-label">
-                <span class="dot red"></span>
-                <span>AGV #03 상태</span>
-              </div>
-              <div class="status-value">경로 이탈 감지</div>
-            </div>
+          <div class="status-list" id="agv-status-list">
+
           </div>
         </section>
         <!-- 요약 차트 -->

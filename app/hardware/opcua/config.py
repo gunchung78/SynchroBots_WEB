@@ -1,6 +1,7 @@
 # app/hardware/opcua/config.py
 
 OPCUA_SERVER_URL = "opc.tcp://172.30.1.61:0630/freeopcua/server/"
+# OPCUA_NAMESPACE_URI = "http://synchrobots.com/interfaces"
 OPCUA_NAMESPACE_URI = "http://examples.freeopcua.github.io"
 
 # Flask 서버 베이스 URL (같은 서버라면 127.0.0.1)
@@ -18,7 +19,7 @@ SUBSCRIBE_NODES = [
         "browse_path": ["0:Objects", "{idx}:PLC", "{idx}:read_conveyor_sensor_check"],
         "webhook": "/api/v1/plc/conveyor_sensor_check",  
     },
-    #로봇암 센서 체크 - AMR : write_amr_go_move("pick_up_zone")
+    #로봇암 센서 체크 - AMR : write_amr_go_move("pick_up_zone"), ARM : write_arm_go_move("go_home")
     {
         "name": "robotarm_sensor_check",
         "browse_path": ["0:Objects", "{idx}:PLC", "{idx}:read_robotarm_sensor_check"],
@@ -33,13 +34,13 @@ SUBSCRIBE_NODES = [
         "browse_path": ["0:Objects", "{idx}:ARM", "{idx}:read_arm_img"],
         "webhook": "/api/v1/arm/arm_img",
     },
-    # Place 단건 수행 완료 알림 - PLC : write_ready_state()
+    # # Place 단건 수행 완료 알림 - PLC : write_ready_state()
     {
         "name": "arm_place_single",
         "browse_path": ["0:Objects", "{idx}:ARM", "{idx}:read_arm_place_single"],
         "webhook": "/api/v1/arm/arm_place_single", 
     },
-     # Place 전체 수행 완료 알림 - AMR : write_amr_go_positions("{"object_info" : "['esp32','motordriver','powersuplpy']"}")
+    #  # Place 전체 수행 완료 알림 - AMR : write_amr_go_positions("{"object_info" : "['esp32','motordriver','powersuplpy']"}")
     {
         "name": "arm_place_completed",
         "browse_path": ["0:Objects", "{idx}:ARM", "{idx}:read_arm_place_completed"],
@@ -53,9 +54,9 @@ SUBSCRIBE_NODES = [
     # 2.픽업존 도착(robotarm_sensor_check 일때만 픽업존 이동) - ARM : write_arm_go_move("mission_start")
     # 3.장애물 혹은 에러로 인한 이동불가상태 - AMR : write_amr_go_move("go_home")
     {
-        "name": "write_amr_mission_state",
+        "name": "amr_mission_state",
         "browse_path": ["0:Objects", "{idx}:AMR", "{idx}:read_amr_mission_state"],
-        "webhook": "/api/v1/amr/conveyor_sensor_check",  
+        "webhook": "/api/v1/amr/amr_mission_state",  
     },
 
 ]

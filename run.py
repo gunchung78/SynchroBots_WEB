@@ -1,5 +1,5 @@
 # run.py
-from flask import Flask,redirect, url_for, render_template
+from flask import Flask
 import config
 # from app.hardware.Modbus import ModbusMonitor
 import os

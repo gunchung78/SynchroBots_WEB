@@ -1,57 +1,111 @@
 # app/api/v1/plc_api.py
 
 from flask import Blueprint, request, jsonify
+from app.hardware.opcua.sender import (
+    write_ready_state,
+    write_amr_go_positions,
+)
+from app.services.control_log_service import log_control_action
 
-plc_api_bp = Blueprint("plc_api", __name__)
-
-
-@plc_api_bp.route("/conveyor_sensor_check", methods=["POST"])
-def conveyor_sensor_check():
-    """
-    OPC UA Worker → Flask Webhook
-    config.SUBSCRIBE_NODES 에서 name='conveyor_sensor_check' 로 들어오는 값 처리
-    """
-    data = request.get_json(silent=True) or {}
-
-    event = data.get("event")   # ex) "conveyor_sensor_check"
-    value = data.get("value")   # ex) True / 0/1 / 기타 숫자, 문자열
-
-    print(f"[PLC API] conveyor_sensor_check: event={event}, value={value}")
-
-    # TODO: 나중에 여기서 카메라 Anomaly 체크 로직 기입
-    print(f'최종 : {value}')
-    return jsonify({
-        "ok": True,
-        "event": event,
-        "value": value,
-    }), 200
+arm_api_bp = Blueprint("arm_api", __name__)
 
 
-@plc_api_bp.route("/read_robotarm_sensor_check", methods=["POST"])
-def read_robotarm_sensor_check():
-    """
-    OPC UA Worker → Flask Webhook
-    config.SUBSCRIBE_NODES 에서 name='conveyor_sensor_check' 로 들어오는 값 처리
-    """
-    data = request.get_json(silent=True) or {}
+@arm_api_bp.route("/arm_img", methods=["POST"])
+def arm_img():
+    try:
+        data = request.get_json(force=True)
+        value = data.get("value")
 
-    event = data.get("event")   # ex) "conveyor_sensor_check"
-    value = data.get("value")   # ex) True / 0/1 / 기타 숫자, 문자열
+        if value == 'Ready':
+            return jsonify({"action": "Ready pass"}), 200
 
-    print(f"[PLC API] read_robotarm_sensor_check: event={event}, value={value}")
+        print(f"[ARM] arm_img webhook 수신: value={value}")
 
-    # 값이 True로 전달 될 시 
-    # AMR write_amr_go_move(이동명령 "pick_up_zone")
-    # ARM write_arm_start(미션 시작 명령 )
-    if(value == True):
-        print(f'최종 : {value}')
+        # True가 아닐 경우 아무 동작 안함
+        if not value:
+            return jsonify({"ok": True, "action": "no_action"}), 200
+        # 이미지 체크 및 데이터 저장
+
+        return jsonify({
+            "ok": True,
+            "action": "arm_img_triggered"
+        }), 200
+
+    except Exception as e:
+        print(f"[AMR] arm_img 오류: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
+    
+
+@arm_api_bp.route("/arm_place_single", methods=["POST"])
+def arm_place_single():
+    try:
+        data = request.get_json(force=True)
+        value = data.get("value")
+
+        if value == 'Ready':
+            return jsonify({"action": "Ready pass"}), 200
+
+        print(f"[ARM] arm_place_single webhook 수신: value={value}")
+
+        # True가 아닐 경우 아무 동작 안함
+        if not value:
+            return jsonify({"ok": True, "action": "no_action"}), 200
+        
+        write_ready_state({"move_command": True})
+
+        return jsonify({
+            "ok": True,
+            "action": "arm_place_single_triggered"
+        }), 200
+
+    except Exception as e:
+        print(f"[AMR] arm_place_single 오류: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
+    
 
 
+@arm_api_bp.route("/arm_place_completed", methods=["POST"])
+def arm_place_completed():
+    try:
+        data = request.get_json(force=True)
+        value = data.get("value")
 
-    # TODO: 나중에 여기서 카메라 Anomaly 체크 로직 기입
-   
-    return jsonify({
-        "ok": True,
-        "event": event,
-        "value": value,
-    }), 200
+        if value == 'Ready':
+            return jsonify({"action": "Ready pass"}), 200
+        
+        print(f"[ARM] arm_place_completed webhook 수신: value={value}")
+
+        # True가 아닐 경우 아무 동작 안함
+        if not value:
+            return jsonify({"ok": True, "action": "no_action"}), 200
+        
+        # write_amr_go_positions({"object_info" : "['esp32']"})
+        amr_cmd = {"object_info" : "esp32"}
+        amr_status = "SUCCESS"
+        amr_msg = None
+
+        try:
+            write_amr_go_positions(amr_cmd)
+        except Exception as e:
+            amr_status = "FAIL"
+            amr_msg = "OPCUA access fail "
+
+        log_control_action(
+            equipment_id="AMR01",
+            target_type="AMR",
+            action_type="amr_go_positions",
+            operator_name="SYSTEM",        # 자동 제어면 SYSTEM, 수동이면 current_user 등
+            source="API",
+            request_payload=amr_cmd,
+            result_status=amr_status,
+            result_message=amr_msg,
+        )
+
+        return jsonify({
+            "ok": True,
+            "action": "arm_place_completed_triggered"
+        }), 200
+
+    except Exception as e:
+        print(f"[AMR] arm_place_completed 오류: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
