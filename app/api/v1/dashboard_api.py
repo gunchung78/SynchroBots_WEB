@@ -89,11 +89,11 @@ BASE_H = 683
 ZOOM_FACTOR = 1.4
 
 # 기준 ROI (원본 캡처에서 실제 맵 영역)
-BASE_ROI = (240, 188, 538, 427)
+BASE_ROI = (260, 230, 500, 440)
 
 # 🔧 나중에 map.yaml 보고 실제 값으로 바꾸면 됨
 ORIGIN_X = -11.5      # 예시
-ORIGIN_Y = -19.4      # 예시
+ORIGIN_Y = -18      # 예시
 RESOLUTION = 0.05     # 예: 1픽셀 = 0.05 m
 
 
@@ -220,44 +220,6 @@ def get_map_meta():
         "crop_w": crop_w,
         "crop_h": crop_h,
     }), 200
-
-# @dashboard_api_bp.route("/map-image", methods=["GET"])
-# def map_image():
-#     pgm_path = os.path.join(MAP_DIR, "map.pgm")
-
-#     if not os.path.exists(pgm_path):
-#         return jsonify({"error": "map file not found"}), 404
-
-#     img = Image.open(pgm_path).convert("L")
-#     arr = np.array(img)
-
-#     UNKNOWN = 205
-
-#     mask = arr != UNKNOWN
-#     coords = np.argwhere(mask)
-    
-#     # if coords.size == 0:
-#     buf = io.BytesIO()
-#     img.save(buf, format="PNG")
-#     buf.seek(0)
-#     return send_file(buf, mimetype="image/png")
-
-#     y_min, x_min = coords.min(axis=0)
-#     y_max, x_max = coords.max(axis=0)
-
-#     margin = 20
-#     y_min = max(y_min - margin, 0)
-#     x_min = max(x_min - margin, 0)
-#     y_max = min(y_max + margin, arr.shape[0] - 1)
-#     x_max = min(x_max + margin, arr.shape[1] - 1)
-
-#     cropped = img.crop((x_min, y_min, x_max, y_max))
-
-#     buf = io.BytesIO()
-#     cropped.save(buf, format="PNG")
-#     buf.seek(0)
-#     return send_file(buf, mimetype="image/png")
-
 
 # === Control Logs (제어 명령 로그) ===
 

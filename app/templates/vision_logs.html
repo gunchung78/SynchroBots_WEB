@@ -1,0 +1,179 @@
+{# app/templates/vision_logs.html #}
+{% extends "base.html" %}
+
+{% block title %}SynchroBots Vision 카메라 로그{% endblock %}
+
+{# 페이지 전용 CSS (공통 layout.css + dashboard.css는 base.html에서 이미 포함되어 있다고 가정) #}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/vision_logs.css') }}">
+{% endblock %}
+
+{# 이 페이지에서 content 영역을 2열 그리드로 쓰기 위해 클래스 추가 #}
+{% block content_class %}vision-content{% endblock %}
+
+{# ✅ 헤더 전체를 이 페이지용으로 교체 #}
+{% block header_left %}
+  <div>
+    <div class="header-title">SynchroBots Vision 카메라 로그</div>
+    <div class="header-sub">
+      ANOMALY · JOINT_DETECTION · PASS/REJECT 히스토리
+    </div>
+  </div>
+{% endblock %}
+
+{% block content %}
+
+  {# 🔹 왼쪽 컬럼: 로그 목록 + 요약/차트 #}
+  <div class="vision-left-col">
+
+    {# 좌상: Vision 검사 로그 목록 #}
+   
+
+    {# 좌하: Vision 검사 요약 / 차트 #}
+    <section class="card card-vision-summary">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Vision 검사 요약</div>
+        </div>
+        <span class="pill">최근 N건 기준</span>
+      </div>
+
+      {# 필요하다면 위에 칩(전체 건수 / PASS 비율 등)을 넣을 수도 있음 #}
+      {# <div class="vision-summary-chips">
+        ...
+      </div> #}
+
+      <div class="vision-summary-charts">
+        <div class="chart-box">
+          <div class="card-sub chart-caption">
+            ANOMALY PASS / REJECT 평균
+          </div>
+          <canvas id="visionAnomalyChart" height="90"></canvas>
+        </div>
+
+        <div class="chart-box">
+          <div class="card-sub chart-caption">
+            추가 분석 차트 (준비중)
+          </div>
+          <canvas id="visionFutureChart" height="90"></canvas>
+        </div>
+      </div>
+    </section>
+ <section class="card vision-log-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Vision 검사 로그 (mission_camera_logs)</div>
+          <div class="card-sub">최신 검사 결과 · 장비별 / 모드별 필터</div>
+        </div>
+
+        <div class="vision-filters">
+          <select id="vision-filter-mode">
+            <option value="">모드 전체</option>
+            <option value="ANOMALY">ANOMALY</option>
+            <option value="JOINT_DETECTION">JOINT_DETECTION</option>
+          </select>
+
+          <select id="vision-filter-decision">
+            <option value="">판정 전체</option>
+            <option value="PASS">PASS</option>
+            <option value="REJECT">REJECT</option>
+            <option value="UNKNOWN">UNKNOWN</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="vision-log-table">
+        <div class="vision-log-header log-header">
+          <span>시간</span>
+          <span>장비</span>
+          <span>모드</span>
+          <span>결과</span>
+          <span>모듈/스코어</span>
+        </div>
+
+        <div id="vision-log-body" class="vision-log-body"></div>
+
+        <div class="vision-log-footer">
+          <span id="vision-log-count">총 0건</span>
+
+          <div class="vision-pager">
+            <button id="vision-page-prev" type="button">&lt;</button>
+            <span id="vision-page-label">1 / 1</span>
+            <button id="vision-page-next" type="button">&gt;</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  {# 🔹 오른쪽 컬럼: 선택된 로그 상세 #}
+  <section class="card card-vision-detail">
+    <div class="card-header">
+      <div>
+        <div class="card-title">선택된 로그 상세</div>
+        <div class="card-sub">캡쳐 이미지 · 모델 출력 · 픽업 좌표</div>
+      </div>
+      <span class="pill" id="detail-id-pill">log_id: -</span>
+    </div>
+
+    <div class="vision-detail-layout">
+      {# 이미지 #}
+      <div class="vision-image-wrap">
+        <div class="vision-image-placeholder" id="vision-image-placeholder">
+          이미지가 없습니다.
+        </div>
+        <img id="vision-image" class="vision-image" src="" alt="vision capture" />
+      </div>
+
+      {# 텍스트 메타 정보 #}
+      <div class="vision-meta">
+        <div class="vision-meta-row">
+          <span class="meta-label">장비</span>
+          <span class="meta-value" id="detail-equipment">-</span>
+        </div>
+        <div class="vision-meta-row">
+          <span class="meta-label">모드</span>
+          <span class="meta-value" id="detail-mode">-</span>
+        </div>
+        <div class="vision-meta-row">
+          <span class="meta-label">모듈 타입</span>
+          <span class="meta-value" id="detail-module">-</span>
+        </div>
+        <div class="vision-meta-row">
+          <span class="meta-label">판정</span>
+          <span class="meta-value" id="detail-decision">-</span>
+        </div>
+        <div class="vision-meta-row">
+          <span class="meta-label">정상/불량</span>
+          <span class="meta-value" id="detail-anomaly-flag">-</span>
+        </div>
+        <div class="vision-meta-row">
+          <span class="meta-label">분류 신뢰도</span>
+          <span class="meta-value" id="detail-confidence">-</span>
+        </div>
+        <div class="vision-meta-row">
+          <span class="meta-label">Anomaly Score</span>
+          <span class="meta-value" id="detail-anomaly-score">-</span>
+        </div>
+        <div class="vision-meta-row">
+          <span class="meta-label">픽업 좌표</span>
+          <span class="meta-value" id="detail-pick-coord">-</span>
+        </div>
+        <div class="vision-meta-row">
+          <span class="meta-label">이미지 파일</span>
+          <span class="meta-value" id="detail-file">-</span>
+        </div>
+        <div class="vision-meta-row">
+          <span class="meta-label">생성 시각</span>
+          <span class="meta-value" id="detail-created-at">-</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+{% endblock %}
+
+{% block extra_js %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="{{ url_for('static', filename='js/vision_logs.js') }}"></script>
+{% endblock %}

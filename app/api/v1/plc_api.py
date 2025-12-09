@@ -39,9 +39,10 @@ def conveyor_sensor_check():
         inspection = run_anomaly_inspection_once()
 
         log = MissionCameraLog(
-            equipment_id="SENSER01",
+            equipment_id="CAMERA01",
             mode="ANOMALY",
-            # image_data=inspection["image_bytes"],
+            image_name=inspection["image_name"],
+            image_path=inspection["image_path"],
             module_type=inspection["module_type"],
             classification_confidence=inspection["classification_confidence"],
             anomaly_flag=inspection["anomaly_flag"],

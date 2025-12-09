@@ -1,6 +1,7 @@
 # config.py
 
 import os
+from pathlib import Path
 
 
 class Config:
@@ -29,3 +30,5 @@ class Config:
     # 필요 시 옵션 확장
     # -----------------------------------
     JSON_AS_ASCII = False  # 한글 JSON 처리용
+
+    BASE_DIR = Path(__file__).resolve().parent.parent

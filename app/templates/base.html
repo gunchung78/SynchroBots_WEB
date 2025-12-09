@@ -1,0 +1,60 @@
+{# app/templates/base.html #}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}SynchroBots Dashboard{% endblock %}</title>
+
+  {# 공통 레이아웃 / 사이드바 #}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+  {# 기존 대시보드 공통 스타일 #}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <div class="layout-root">
+    {# 🔹 최상단 헤더 (전체 가로 폭) #}
+    <header class="header">
+        <div class="header-left">
+            {% block header_left %}
+            <!-- <div class="header-title">SynchroBots 통합 관제 대시보드</div>
+            <div class="header-sub">AGV · RobotArm · PLC · 이벤트 · 제어 로그</div> -->
+            {% endblock %}
+        </div>
+        <div class="header-right">
+            <button id="sidebar-toggle-btn" class="sidebar-toggle-btn">☰</button>
+
+            {% block header_right %}
+            <span class="badge">DEMO · MOCK DATA</span>
+            {% endblock %}
+        </div>
+    </header>
+
+    {# 🔹 헤더 아래: 좌측 사이드바 + 우측 컨텐츠 #}
+    <div class="layout-main">
+      <aside class="layout-sidebar">
+        {% include "_sidebar.html" %}
+      </aside>
+
+      <main class="content {% block content_class %}{% endblock %}">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+    {% block extra_js %}  {% endblock %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const toggleBtn = document.getElementById("sidebar-toggle-btn");
+            if (!toggleBtn) return;
+
+            toggleBtn.addEventListener("click", () => {
+                // console.log("sidebar toggle clicked");
+                document.body.classList.toggle("sidebar-hidden");
+            });
+        });
+    </script>
+</body>
+</html>

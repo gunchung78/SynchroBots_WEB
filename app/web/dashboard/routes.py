@@ -6,9 +6,9 @@ from . import dashboard_bp
 
 @dashboard_bp.get("/")
 def index():
-    return render_template("dashboard.html")
+    return render_template("dashboard.html", active_page="dashboard")
 
 
 @dashboard_bp.get("/control")
 def control_page():
-    return render_template("control.html")
+    return render_template("control.html", active_page="control")

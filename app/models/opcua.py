@@ -27,7 +27,7 @@ class MissionCameraLog(db.Model):
     image_path = db.Column(db.String(255))
 
     # 캡처 원본 이미지 (JPEG/PNG 바이너리)
-    image_data = db.Column(db.LargeBinary)
+    image_name = db.Column(db.String(255))
 
     # 모듈 분류 결과 (MB102, L298N, ESP32 등)
     module_type = db.Column(db.String(64))

@@ -1,0 +1,334 @@
+
+/* 대시보드 공통 .content 위에 추가로 얹는 레이아웃 */
+.vision-content {
+  grid-template-columns: minmax(480px, 1.6fr) minmax(320px, 1.1fr); /* 좌: 리스트+요약, 우: 상세 */
+}
+
+.vision-left-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+/* 왼쪽: 로그 리스트 카드 */
+.card-vision-list {
+  min-height: 310px;
+}
+
+/* 모드 / 판정 필터 */
+.vision-filters {
+  display: flex;
+  gap: 6px;
+}
+
+.vision-filters select {
+  background: #020617;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  color: #e5e7eb;
+  font-size: 11px;
+  padding: 3px 10px;
+  outline: none;
+}
+
+.vision-filters select:focus {
+  border-color: rgba(56, 189, 248, 0.8);
+}
+
+/* Vision 로그 테이블: 컬럼 구조만 오버라이드 */
+.vision-log-table .log-header,
+.vision-log-table .log-row {
+  grid-template-columns: 70px 80px 90px 80px 1fr;
+}
+
+/* 행 hover / 선택 효과 */
+.vision-log-table .log-row {
+  cursor: pointer;
+  transition: background 0.08s ease, transform 0.06s ease;
+}
+
+.vision-log-table .log-row:hover {
+  background: rgba(30, 64, 175, 0.7);
+}
+
+.vision-log-row-selected {
+  background: rgba(37, 99, 235, 0.9) !important;
+  transform: translateY(-1px);
+}
+
+/* PASS / REJECT / UNKNOWN 뱃지 */
+.decision-pill {
+  font-size: 10px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+}
+
+.decision-pass {
+  background: rgba(34, 197, 94, 0.15);
+  color: #bbf7d0;
+  border-color: rgba(34, 197, 94, 0.7);
+}
+
+.decision-reject {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fecaca;
+  border-color: rgba(239, 68, 68, 0.7);
+}
+
+.decision-unknown {
+  background: rgba(148, 163, 184, 0.15);
+  color: #e5e7eb;
+}
+
+/* 정상/불량 텍스트 강조 */
+.flag-normal {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.flag-defect {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+/* 리스트 하단 카운트 텍스트 */
+.vision-footer {
+  margin-top: 6px;
+  font-size: 10px;
+  color: #9ca3af;
+}
+
+/* 오른쪽: 상세 카드 */
+.card-vision-detail {
+  min-height: 280px;
+}
+
+/* 이미지 + 메타 2열 레이아웃 */
+.vision-detail-layout {
+  display: grid;
+  grid-template-columns: 1fr; 
+  gap: 10px;
+  margin-top: 8px;
+}
+
+/* 이미지 박스 */
+.vision-image-wrap {
+  position: relative;
+  border-radius: 10px;
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  background: rgba(15, 23, 42, 0.9);
+  min-height: 298px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.vision-image {
+  max-width: 100%;
+  max-height: 100%;
+  display: none;            /* 실제 이미지 있을 때만 JS에서 block으로 변경 */
+  object-fit: contain;
+}
+
+.vision-image-placeholder {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+/* 우측 메타 정보 박스 */
+.vision-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.vision-meta-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.meta-label {
+  color: #9ca3af;
+}
+
+.meta-value {
+  font-weight: 600;
+  text-align: right;
+}
+
+/* 반응형: 화면 좁으면 위/아래로 쌓기 */
+@media (max-width: 1080px) {
+  .vision-content {
+    grid-template-columns: 1fr;
+  }
+
+  .vision-detail-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ================== Vision 요약 차트 카드 ================== */
+
+.card-vision-summary {
+  margin-bottom: 0px;
+  max-height: 300px;
+}
+
+/* 칩(요약 숫자) 레이아웃 */
+.vision-summary-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.vision-summary-chip {
+  min-width: 120px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+}
+
+.vision-summary-chip .label {
+  color: #9ca3af;
+}
+
+.vision-summary-chip .value {
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.card-vision-summary{
+  gap: 0px
+}
+
+/* 차트 2개 나란히 */
+.vision-summary-charts {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  /* margin-top: 10px; */
+}
+
+/* 좁은 화면에서는 위/아래로 */
+@media (max-width: 1080px) {
+  .vision-summary-charts {
+    flex-direction: column;
+  }
+}
+
+.vision-log-row.is-selected {
+  outline: 1px solid rgba(59, 130, 246, 0.9);
+  background: rgba(15, 23, 42, 0.95);
+}
+
+/* Vision 로그 테이블 공통 박스 (없으면 추가) */
+.vision-log-table {
+  margin-top: 6px;
+  font-size: 11px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(55, 65, 81, 0.9);
+}
+
+/* 헤더 + 행 레이아웃 (display:grid 포함해서 다시 정의) */
+.vision-log-table .log-header,
+.vision-log-table .log-row {
+  display: grid;
+  grid-template-columns: 70px 150px 90px 80px 1fr;  /* ← 컬럼 폭 넉넉하게 조정 */
+  align-items: center;
+  padding: 4px 8px;
+}
+
+/* 행 hover / 선택 효과 */
+.vision-log-table .log-row {
+  cursor: pointer;
+  transition: background 0.08s ease, transform 0.06s ease;
+}
+
+.vision-log-table .log-row:hover {
+  background: rgba(30, 64, 175, 0.7);
+}
+
+/* 선택된 행 */
+.vision-log-row-selected {
+  background: rgba(37, 99, 235, 0.9) !important;
+  transform: translateY(-1px);
+}
+
+/* 리스트 하단 카운트 텍스트 – 클래스명 맞춰주기 */
+.vision-log-footer {
+  padding: 4px 8px;
+  font-size: 10px;
+  color: #9ca3af;
+  border-top: 1px solid rgba(55, 65, 81, 0.9);
+}
+
+/* 페이징 푸터 */
+.vision-log-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  font-size: 10px;
+  color: #9ca3af;
+  border-top: 1px solid rgba(55, 65, 81, 0.9);
+}
+
+/* 페이지네이션 버튼 */
+.vision-pager {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vision-pager button {
+  min-width: 26px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: #020617;
+  color: #e5e7eb;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0 6px;
+}
+
+.vision-pager button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.vision-pager button:not(:disabled):hover {
+  background: rgba(15, 23, 42, 0.9);
+}
+
+#vision-page-label {
+  min-width: 48px;
+  text-align: center;
+}
+
+.vision-log-body {
+    min-height: 180px;   /* 원하는 고정 높이 (적당히 조절 가능) */
+    overflow-y: auto;
+}
+
+.vision-image-wrap{
+      max-height: 298px;
+}
+
+.chart-box {
+  height: 200px;   /* 필요하면 160~220px 정도로 취향껏 조절 */
+  width: 50%;
+}

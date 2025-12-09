@@ -267,7 +267,7 @@ def run_anomaly_inspection_once():
 
     last_frame = frames[-1]
     ok, buf = cv2.imencode(".jpg", last_frame)
-    image_bytes = buf.tobytes() if ok else None
+    # image_bytes = buf.tobytes() if ok else None
 
     import time
 
@@ -294,6 +294,6 @@ def run_anomaly_inspection_once():
         "anomaly_flag": anomaly_flag,
         "anomaly_score": anomaly_score,
         "decision": decision,
-        "image_bytes": image_bytes,
+        "image_name": filename,
         "image_path": save_path,
     }

@@ -1,23 +1,13 @@
-function refreshAgvMap() {
-  const el = document.getElementById("agv-map-bg");
-  if (!el) return;
 
-  const ts = Date.now();
-  el.style.backgroundImage = `url("/api/v1/dashboard/map-image?t=${ts}")`;
-}
 
 document.addEventListener("DOMContentLoaded", async () => {
   initDashboardStream()
   // 맵 배경 / 메타 / AMR 상태
   refreshAgvMap();
-  // await loadMapMeta();
-  // await loadAmrStates();
 
   // 기존 기능들
   initCharts();
-  // loadMissionLogs();
-  // loadEvents();
-  // loadControlLogs();
+
 
 });
 
@@ -250,7 +240,6 @@ async function loadEvents() {
 }
 
 // -------------------- 제어 로그(API) --------------------
-
 
 function createControlRow(c) {
   const row = document.createElement("div");
@@ -596,10 +585,7 @@ function drawAmrMarkers(states) {
   if (!meta) return;
 
   const wrap = document.querySelector(".agv-path");
-  if (!wrap) {
-    console.warn("drawAmrMarkers: .agv-path not found");
-    return;
-  }
+  if (!wrap) return;
 
   const displayW = wrap.clientWidth;
   const displayH = wrap.clientHeight;
@@ -614,70 +600,76 @@ function drawAmrMarkers(states) {
   const crop_w     = parseFloat(meta.crop_w);
   const crop_h     = parseFloat(meta.crop_h);
 
-  if (!resolution || !crop_w || !crop_h) {
-    console.warn("drawAmrMarkers: invalid meta (resolution/crop_w/crop_h)");
-    return;
-  }
+  if (!resolution || !crop_w || !crop_h) return;
 
   // 기존 마커 제거
   while (wrap.firstChild) {
     wrap.removeChild(wrap.firstChild);
   }
-  // drawAmrMarkers(states) 안에서, forEach 위쪽에 추가
-  const DEG = 75;  // 일단 0으로 두고, 나중에 -5, +5 등으로 조절
-  const theta = DEG * Math.PI / 180;
+
+  // 회전 각도 (필요 없으면 0으로)
+  const DEG = 160;
+  const theta = (DEG * Math.PI) / 180;
   const cosT = Math.cos(theta);
   const sinT = Math.sin(theta);
 
-  // 회전 기준점: 현재 AMR 위치들의 평균(중심)
-  let avgX = 0;
-  let avgY = 0;
-  if (states.length > 0) {
-    states.forEach((s) => {
-      avgX += s.pos_x;
-      avgY += s.pos_y;
-    });
-    avgX /= states.length;
-    avgY /= states.length;
-  }
+  // 회전 기준점 (원하면 0,0 / origin 등으로 바꿔도 됨)
+  const PIVOT_X = -0.6;
+  const PIVOT_Y = -3;
+
   states.forEach((s, idx) => {
-    // ===== 0) 월드 좌표에서 기준점(평균) 기준으로 이동 =====
-    const wx = s.pos_x - avgX;
-    const wy = s.pos_y - avgY;
+    if (typeof s.pos_x !== "number" || typeof s.pos_y !== "number") return;
 
-    // ===== 1) 회전 보정 (기준점 기준 회전) =====
-    const rx_local = wx * cosT - wy * sinT;
-    const ry_local = wx * sinT + wy * cosT;
+    // ===========================
+    // 1) 축 스왑: y→가로, x→세로
+    //    (필요하면 부호도 바꿀 수 있게 플래그로 둠)
+    // ===========================
+    const SWAP_XY   = true;   // ← 지금 케이스에서 true
+    const INVERT_X  = false;  // 필요하면 true
+    const INVERT_Y  = true;  // 필요하면 true
 
-    // 다시 월드 좌표로 되돌리기
-    const rx = rx_local + avgX;
-    const ry = ry_local + avgY;
+    let worldX, worldY;
+    if (SWAP_XY) {
+      worldX = s.pos_y;   // 👉 좌우 값
+      worldY = s.pos_x;   // 👉 전후 값
+    } else {
+      worldX = s.pos_x;
+      worldY = s.pos_y;
+    }
+    if (INVERT_X) worldX = -worldX;
+    if (INVERT_Y) worldY = -worldY;
 
-    // ===== 2) 회전된 좌표 → 이미지 픽셀 변환 =====
-    const px = (rx - origin_x) / resolution;
+    // ===========================
+    // 2) 기준점 기준 이동 + 회전
+    // ===========================
+    const wx = worldX - PIVOT_X;
+    const wy = worldY - PIVOT_Y;
+
+    const rx = wx * cosT - wy * sinT + PIVOT_X;
+    const ry = wx * sinT + wy * cosT + PIVOT_Y;
+    // 회전 안 쓰고 그냥 그대로
+    // const rx = worldX;
+    // const ry = worldY;
+
+    // ===========================
+    // 3) 월드 → 픽셀 → crop → 화면
+    // ===========================
+    const px       = (rx - origin_x) / resolution;
     const py_world = (ry - origin_y) / resolution;
+    const py       = img_height - py_world;
 
-    const py = img_height - py_world; // y축 반전
-
-    // ===== 3) crop 내부 좌표 =====
     const px_crop = px - crop_x_min;
     const py_crop = py - crop_y_min;
 
-    let px_crop_clamped = px_crop;
-    let py_crop_clamped = py_crop;
+    let px_crop_clamped = Math.min(Math.max(px_crop, 0), crop_w);
+    let py_crop_clamped = Math.min(Math.max(py_crop, 0), crop_h);
 
-    if (px_crop_clamped < 0) px_crop_clamped = 0;
-    if (px_crop_clamped > crop_w) px_crop_clamped = crop_w;
-    if (py_crop_clamped < 0) py_crop_clamped = 0;
-    if (py_crop_clamped > crop_h) py_crop_clamped = crop_h;
-
-    const relX = px_crop_clamped / crop_w;
-    const relY = py_crop_clamped / crop_h;
+    const relX = px_crop_clamped / crop_w;   // 👉 화면 가로 비율
+    const relY = py_crop_clamped / crop_h;   // 👉 화면 세로 비율
 
     const screenX = relX * displayW;
     const screenY = relY * displayH;
 
-    // ===== 4) DOM 생성 + 겹침 방지 jitter =====
     const node = document.createElement("div");
     node.className = "agv-node";
 
