@@ -6,22 +6,22 @@
     </div>
 
     <nav class="sidebar-nav">
-        {# 대시보드 링크 #}
-        <a href="{{ url_for('dashboard.index') }}"
-        class="sidebar-link {% if active_page == 'dashboard' %}is-active{% endif %}">
-        DashBoard
+        {# Dashboard #}
+        <a href="{{ url_for('web_bp.dashboard') }}"
+           class="sidebar-link {% if active_page == 'dashboard' %}is-active{% endif %}">
+            DashBoard
         </a>
 
-        {# 제어 패널 예시 #}
-        <a href="{{ url_for('dashboard.control_page') }}"
-        class="sidebar-link {% if active_page == 'control' %}is-active{% endif %}">
-        Control Panel
+        {# Control Panel #}
+        <a href="{{ url_for('web_bp.control') }}"
+           class="sidebar-link {% if active_page == 'control' %}is-active{% endif %}">
+            Control Panel
         </a>
 
-        {# Vision 로그 페이지 #}
-        <a href="{{ url_for('vision.index') }}"
-        class="sidebar-link {% if active_page == 'vision_logs' %}is-active{% endif %}">
-        Vision Log
+        {# Vision Logs #}
+        <a href="{{ url_for('web_bp.vision_logs') }}"
+           class="sidebar-link {% if active_page == 'vision_logs' %}is-active{% endif %}">
+            Vision Log
         </a>
     </nav>
   </div>

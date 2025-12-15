@@ -28,6 +28,18 @@ def conveyor_sensor_check():
         if value == 'Ready':
             return jsonify({"action": "Ready pass"}), 200
         
+        # anomaly_str = "NG"
+        # write_ok_ng_value({"Anomaly": anomaly_str})
+        # return jsonify(
+        #     {
+        #         "ok": True,
+        #         "action": "conveyor_sensor_triggered",
+        #         "vision": {
+        #             "test": ,
+        #         },
+        #     }
+        # ), 200
+
         print(f"[PLC] conveyor_sensor_check webhook 수신: value={value}")
 
         # True가 아닐 경우 아무 동작 안함
@@ -39,7 +51,7 @@ def conveyor_sensor_check():
         inspection = run_anomaly_inspection_once()
 
         log = MissionCameraLog(
-            equipment_id="CAMERA01",
+            equipment_id="SENSER01",
             mode="ANOMALY",
             image_name=inspection["image_name"],
             image_path=inspection["image_path"],

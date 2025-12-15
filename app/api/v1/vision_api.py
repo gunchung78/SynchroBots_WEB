@@ -4,7 +4,7 @@ from flask import Blueprint, request, jsonify, abort, send_file
 from pathlib import Path
 from config import Config
 
-from sqlalchemy import func
+from sqlalchemy import func, case, desc
 from datetime import datetime, timedelta
 
 from app import db
@@ -139,23 +139,75 @@ def get_logs_image():
 
 @vision_api_bp.route("/stats", methods=["GET"])
 def get_vision_stats():
-    from datetime import datetime, timedelta
     from collections import defaultdict
+    from datetime import datetime, timedelta
 
     mode = request.args.get("mode") or "ANOMALY"
 
-    # 최근 n일 (기본 30일)
-    days = int(request.args.get("days", 30))
-    since = datetime.utcnow() - timedelta(days=days)
+    # ✅ 최근 "데이터가 있는 날짜" 기준 N개
+    limit_days = int(request.args.get("limit_days", 5))
+    if limit_days <= 0:
+        limit_days = 5
+    if limit_days > 30:
+        limit_days = 30
 
-    q = (
-        db.session.query(MissionCameraLog)
-        .filter(MissionCameraLog.created_at >= since)
+    # (옵션) 기존 days 파라미터는 호환용으로만 두고, 실제로는 사용 안 해도 됨
+    # days = int(request.args.get("days", 30))
+
+    # ---------------------------
+    # 1) 최근 날짜 N개 먼저 뽑기
+    # ---------------------------
+    day_col = func.date(MissionCameraLog.created_at).label("d")
+
+    recent_days_rows = (
+        db.session.query(day_col)
         .filter(MissionCameraLog.mode == mode)
-        .order_by(MissionCameraLog.created_at.asc())
+        .group_by(day_col)
+        .order_by(desc(day_col))
+        .limit(limit_days)
+        .all()
     )
 
-    logs = q.all()
+    # 데이터가 없으면 빈 응답
+    if not recent_days_rows:
+        return jsonify({
+            "stats": {
+                "total_count": 0,
+                "pass_count": 0,
+                "reject_count": 0,
+                "unknown_count": 0,
+                "pass_rate": 0.0,
+                "avg_confidence": None,
+                "avg_anomaly_score": None,
+            },
+            "chart": {
+                "labels": [],
+                "pass_scores": [],
+                "reject_scores": [],
+                "threshold": 0.55
+            },
+            "meta": {
+                "window_type": "recent_days_with_data",
+                "limit_days": limit_days,
+                "mode": mode,
+            }
+        })
+
+    # 날짜 리스트 (desc로 뽑혔으니 이후 차트는 asc로 보기 좋게)
+    recent_days = [r.d for r in recent_days_rows]
+    recent_days_sorted = sorted(recent_days)  # asc
+
+    # ---------------------------
+    # 2) 그 날짜들에 해당하는 로그만 조회
+    #    (DATE(created_at) IN (...))
+    # ---------------------------
+    logs = (
+        db.session.query(MissionCameraLog)
+        .filter(MissionCameraLog.mode == mode)
+        .filter(func.date(MissionCameraLog.created_at).in_(recent_days))
+        .order_by(MissionCameraLog.created_at.asc())
+        .all()
+    )
 
     # ---------- 기본 통계 ----------
     total       = len(logs)
@@ -164,53 +216,62 @@ def get_vision_stats():
     unknown_cnt = total - pass_cnt - reject_cnt
     pass_rate   = (pass_cnt / total) if total > 0 else 0.0
 
-    # 평균 anomaly_score (원본 값, 스케일링 X)
     anomaly_vals = [x.anomaly_score for x in logs if x.anomaly_score is not None]
-    avg_anomaly = sum(anomaly_vals) / len(anomaly_vals) if anomaly_vals else None
+    avg_anomaly = (sum(anomaly_vals) / len(anomaly_vals)) if anomaly_vals else None
 
-    # 평균 confidence (원본 값)
-    conf_vals = [
-        x.classification_confidence
-        for x in logs
-        if x.classification_confidence is not None
-    ]
-    avg_conf = sum(conf_vals) / len(conf_vals) if conf_vals else None
+    conf_vals = [x.classification_confidence for x in logs if x.classification_confidence is not None]
+    avg_conf = (sum(conf_vals) / len(conf_vals)) if conf_vals else None
 
     # ---------------------------
-    # Day 단위 버킷 생성
+    # Day 단위 버킷 생성 (최근 N일만)
     # ---------------------------
     bucket_pass = defaultdict(list)
     bucket_reject = defaultdict(list)
 
+    count_pass = defaultdict(int)
+    count_reject = defaultdict(int)
+    count_total = defaultdict(int)
+
     for x in logs:
+        day = x.created_at.date()
+
+        # total은 anomaly_score 유무와 무관하게 "결정 로그 수"로 세고 싶으면 decision 기준 추천
+        if x.decision in ("PASS", "REJECT"):
+            count_total[day] += 1
+            if x.decision == "PASS":
+                count_pass[day] += 1
+            elif x.decision == "REJECT":
+                count_reject[day] += 1
+
+        # score 평균용 버킷은 anomaly_score 있을 때만
         if x.anomaly_score is None:
             continue
-
-        day = x.created_at.date()  # 날짜 단위
 
         if x.decision == "PASS":
             bucket_pass[day].append(x.anomaly_score)
         elif x.decision == "REJECT":
             bucket_reject[day].append(x.anomaly_score)
-
-    # 날짜 정렬
-    labels = sorted(set(bucket_pass.keys()) | set(bucket_reject.keys()))
-
+        
+        
+        
     def avg(lst):
         return (sum(lst) / len(lst)) if lst else None
 
-    # 원본 평균 값
+    # ✅ labels는 “최근 N일(데이터 있는 날짜)”을 강제로 유지
+    labels = recent_days_sorted
+
+    pass_counts   = [count_pass[d] for d in labels]
+    reject_counts = [count_reject[d] for d in labels]
+    total_counts  = [count_total[d] for d in labels]
+
     raw_pass_scores   = [avg(bucket_pass[d]) for d in labels]
     raw_reject_scores = [avg(bucket_reject[d]) for d in labels]
 
-    # ---------------------------
-    # 📌 차트용 값은 10배 스케일링
-    # ---------------------------
+    # 차트용 10배 스케일링
     SCALE = 10.0
     pass_scores   = [v * SCALE if v is not None else None for v in raw_pass_scores]
     reject_scores = [v * SCALE if v is not None else None for v in raw_reject_scores]
 
-    # YYYY-MM-DD 문자열로 변환
     label_strings = [d.strftime("%Y-%m-%d") for d in labels]
 
     return jsonify({
@@ -221,12 +282,101 @@ def get_vision_stats():
             "unknown_count": unknown_cnt,
             "pass_rate": pass_rate,
             "avg_confidence": avg_conf,
-            "avg_anomaly_score": avg_anomaly,  # ← 요약용은 원본 값 유지
+            "avg_anomaly_score": avg_anomaly,
         },
         "chart": {
             "labels": label_strings,
-            "pass_scores": pass_scores,        # ← ×10 된 값
-            "reject_scores": reject_scores,    # ← ×10 된 값
-            "threshold": 0.55                  # 임계값은 그대로 유지 (0~1 범위)
+            "pass_scores": pass_scores,
+            "reject_scores": reject_scores,
+            "threshold": 0.55,
+            "pass_counts": pass_counts,
+            "reject_counts": reject_counts,
+            "total_counts": total_counts,
+        },
+        "meta": {
+            "window_type": "recent_days_with_data",
+            "limit_days": limit_days,
+            "mode": mode,
+        }
+    })
+
+@vision_api_bp.route("/confidence_stats", methods=["GET"])
+def get_vision_confidence_stats():
+    limit_days = int(request.args.get("limit_days", 5))
+    if limit_days <= 0:
+        limit_days = 5
+
+    exclude_zero = request.args.get("exclude_zero", "1")
+    exclude_zero = exclude_zero not in ("0", "false", "False")
+
+    day_col = func.date(MissionCameraLog.created_at).label("d")
+
+    # ✅ 평균
+    anomaly_cls_avg = func.avg(
+        case((MissionCameraLog.mode == "ANOMALY", MissionCameraLog.classification_confidence), else_=None)
+    ).label("anomaly_cls_avg")
+
+    joint_cls_avg = func.avg(
+        case((MissionCameraLog.mode == "JOINT_DETECTION", MissionCameraLog.classification_confidence), else_=None)
+    ).label("joint_cls_avg")
+
+    # ✅ 카운트(일자별)
+    anomaly_cnt = func.sum(
+        case((MissionCameraLog.mode == "ANOMALY", 1), else_=0)
+    ).label("anomaly_cnt")
+
+    joint_cnt = func.sum(
+        case((MissionCameraLog.mode == "JOINT_DETECTION", 1), else_=0)
+    ).label("joint_cnt")
+
+    q = db.session.query(day_col, anomaly_cls_avg, joint_cls_avg, anomaly_cnt, joint_cnt)
+
+    if exclude_zero:
+        q = q.filter(
+            ~(
+                (MissionCameraLog.mode == "JOINT_DETECTION")
+                & (MissionCameraLog.classification_confidence == 0.0)
+            )
+        )
+
+    rows_desc = (
+        q.group_by(day_col)
+         .order_by(desc(day_col))
+         .limit(limit_days)
+         .all()
+    )
+    rows = list(reversed(rows_desc))  # asc
+
+    labels = []
+    anomaly_avg = []
+    joint_avg = []
+    anomaly_counts = []
+    joint_counts = []
+    total_counts = []
+
+    for r in rows:
+        labels.append(r.d.strftime("%Y-%m-%d"))
+        anomaly_avg.append(float(r.anomaly_cls_avg) if r.anomaly_cls_avg is not None else None)
+        joint_avg.append(float(r.joint_cls_avg) if r.joint_cls_avg is not None else None)
+
+        a = int(r.anomaly_cnt or 0)
+        j = int(r.joint_cnt or 0)
+        anomaly_counts.append(a)
+        joint_counts.append(j)
+        total_counts.append(a + j)
+
+    return jsonify({
+        "chart": {
+            "labels": labels,
+            "anomaly_cls_avg": anomaly_avg,
+            "joint_cls_avg": joint_avg,
+            "anomaly_counts": anomaly_counts,
+            "joint_counts": joint_counts,
+            "total_counts": total_counts
+        },
+        "meta": {
+            "window_type": "recent_days_with_data",
+            "limit_days": limit_days,
+            "exclude_zero": exclude_zero
         }
     })

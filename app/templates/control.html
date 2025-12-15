@@ -23,89 +23,110 @@
 
 {% block header_right %}
   {# 토글 버튼은 base.html 에 이미 있음. 여기서는 오른쪽 뱃지만 교체 #}
-  <span class="badge">CONTROL DEMO</span>
+  <span class="badge">CONTROL</span>
 {% endblock %}
 
 {# ---------- 메인 컨텐츠 ---------- #}
 {% block content %}
 
   {# 왼쪽: 장비 제어 카드 #}
-  <section class="card">
-    <div class="card-header">
-      <div class="card-title">장비 제어</div>
-      <div class="card-sub">긴급 정지, 초기화, PLC 출력 제어</div>
+  {# 왼쪽: 장비 제어 카드 #}
+<section class="card">
+  <div class="card-header">
+    <div class="card-title">장비 제어</div>
+    <!-- <div class="card-sub">긴급 정지, 초기화, PLC 출력 제어</div> -->
+  </div>
+
+  <div class="section-grid">
+
+    {# AGV 제어 - AMR 장비들 목록이 동적으로 들어감 #}
+    <div>
+      <div class="status-row">
+        <span>AGV 제어</span>
+        <span class="value">AMR 장비별 제어</span>
+      </div>
+      <div id="amr-control-list" class="equipment-list">
+        {# JS에서 AMR01, AMR02 같은 장비가 개별로 렌더링됨 #}
+      </div>
     </div>
 
-    <div class="section-grid">
-
-      {# AGV 제어 #}
-      <div>
-        <div class="status-row">
-          <span>AGV 제어</span>
-          <span class="value" id="agv-status">AGV #01 · RUN</span>
-        </div>
-        <div class="btn-row">
-          <button class="control-btn btn-danger"
-                  data-target="AGV"
-                  data-action="ESTOP">
-            <span class="icon">⛔</span> 긴급 정지 (E-Stop)
-          </button>
-          <button class="control-btn btn-outline"
-                  data-target="AGV"
-                  data-action="RESUME">
-            <span class="icon">▶</span> 운행 재개
-          </button>
-        </div>
+    {# Robot 제어 - ARM 장비들 목록 #}
+    <div>
+      <div class="status-row">
+        <span>RobotArm 제어</span>
+        <span class="value">Robot 장비별 제어</span>
       </div>
-
-      {# Robot 제어 #}
-      <div>
-        <div class="status-row">
-          <span>RobotArm 제어</span>
-          <span class="value" id="robot-status">Robot #01 · READY</span>
-        </div>
-        <div class="btn-row">
-          <button class="control-btn btn-primary"
-                  data-target="ROBOT"
-                  data-action="HOME">
-            <span class="icon">🏠</span> 홈 포지션 복귀
-          </button>
-          <button class="control-btn btn-outline"
-                  data-target="ROBOT"
-                  data-action="PAUSE">
-            <span class="icon">⏸</span> 일시 정지
-          </button>
-        </div>
+      <div id="robot-control-list" class="equipment-list">
+        {# JS에서 ARM01 같은 장비가 개별로 렌더링됨 #}
       </div>
-
-      {# PLC 제어 #}
-      <div>
-        <div class="status-row">
-          <span>PLC 출력 제어</span>
-          <span class="value" id="plc-status">CONV #02 · OFF</span>
-        </div>
-        <div class="btn-row">
-          <button class="control-btn btn-primary"
-                  data-target="PLC"
-                  data-action="OUTPUT_ON"
-                  data-extra='{"coil":"Y002"}'>
-            <span class="icon">🔌</span> 출력 ON (Y002)
-          </button>
-          <button class="control-btn btn-outline"
-                  data-target="PLC"
-                  data-action="OUTPUT_OFF"
-                  data-extra='{"coil":"Y002"}'>
-            <span class="icon">💤</span> 출력 OFF (Y002)
-          </button>
-        </div>
-      </div>
-
     </div>
 
-    <div class="log-footer-info">
-      ※ 실제 연동 시, 각 버튼 → API 엔드포인트(`/api/v1/control/...`)로 매핑해서 사용
+    {# PLC 제어 - PLC 장비들 목록 #}
+    <div>
+      <div class="status-row">
+        <span>PLC 출력 제어</span>
+        <span class="value">PLC 컨베이어 제어</span>
+      </div>
+      <!-- <div id="plc-control-list" class="equipment-list">
+        {# JS에서 CONVEYOR01, SENSER01 등 필요 장비를 렌더링 #}
+      </div> -->
+      {# ================================
+   ★ 컨베이어 제어 패널
+   ================================ #}
+      <div class="conveyor-card">
+        <div class="conveyor-layout">
+
+          {# 왼쪽 : 컨베이어 벨트 상태 #}
+          <div class="conveyor-left">
+            <div class="conveyor-block">
+              <div class="block-title">컨베이어 벨트 상태</div>
+
+              <div class="belt-row">
+                <button class="belt-btn emergency"  data-plc-action="RUN_MODE" data-run-mode="RUN">운행재개</button>
+                <button class="belt-btn stop"  data-plc-action="RUN_MODE" data-run-mode="STOP">정지</button>
+              </div>
+
+              <div class="belt-row">
+                <button class="belt-btn forward" data-plc-action="DIRECTION" data-direction="FORWARD">정방향</button>
+                <button class="belt-btn reverse" data-plc-action="DIRECTION" data-direction="REVERSE">역방향</button>
+              </div>
+
+              <div class="belt-start-row">
+                <button class="belt-start-btn" data-plc-action="MANUAL_START">수동시작</button>
+              </div>
+            </div>
+          </div>
+
+          {# 오른쪽 : 컨베이어 벨트 제어 #}
+          <div class="conveyor-right">
+            <div class="conveyor-block conveyor-param-block">
+              <div class="block-title">컨베이어 벨트 제어</div>
+
+              <div class="param-row">
+                <span class="param-label">Frequency :</span>
+                <input id="plc-frequency" class="param-input" type="number" step="0.01" min="0" max="60"/>
+              </div>
+
+              <div class="param-row">
+                <span class="param-label">Accelerate :</span>
+                <input id="plc-acceleration" class="param-input" type="number" placeholder="0000" min="0" max="60"/>
+              </div>
+
+              <div class="param-row">
+                <span class="param-label">Deceleration :</span>
+                <input id="plc-deceleration" class="param-input" type="number"  placeholder="0000" min="0" max="60"/>
+              </div>
+
+              <button class="apply-btn" data-plc-action="APPLY_PARAMS">변경 적용</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
     </div>
-  </section>
+  </div>
+</section>
+
 
   {# 오른쪽: 제어 명령 로그 카드 #}
   <section class="card">
@@ -117,6 +138,7 @@
     <div id="log-box" class="log-box">
       <div class="log-box-empty">아직 전송된 제어 명령이 없습니다.</div>
     </div>
+    <div id="log-pagination" class="log-pagination"></div>
   </section>
 
 {% endblock %}

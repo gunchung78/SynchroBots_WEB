@@ -8,7 +8,7 @@ class SubHandler:
         """
         print(f"\n[SUBSCRIBED] Client B :별: 데이터 수신! 수신 값: {val}")
 async def main():
-    server_url = "opc.tcp://172.30.1.61:4840/freeopcua/server/"
+    server_url = "opc.tcp://172.30.1.61:0630/freeopcua/server/"
     client = Client(url=server_url)
     # client.set_security(ua.SecurityPolicyType.NoSecurity)
     try:
@@ -17,11 +17,13 @@ async def main():
         uri = "http://examples.freeopcua.github.io"
         idx = await client.get_namespace_index(uri)
         # 서버로부터 데이터를 '받아올' 노드 탐색
-        read_node = await client.nodes.root.get_child([
-            "0:Objects",
-            f"{idx}:PLC",
-            f"{idx}:read_conveyor_sensor_check"  # 구독 전용 노드
-        ])
+        # read_node = await client.nodes.root.get_child([
+        #     "0:Objects",
+        #     f"2:PLC",
+        #     f"2:read_ok_ng_value"  # 구독 전용 노드
+        # ])
+
+        read_node = client.get_node("ns=2;s=read_ok_ng_value")
         print(f"구독 노드 ID 획득 성공: {read_node}")
         # 4. 구독 설정
         handler = SubHandler()

@@ -24,8 +24,13 @@ NUM_CLASSES = len(CLASS_NAMES)
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 VISION_DIR = os.path.join(BASE_DIR, "data", "visions")
 
-# 이미지 파일 저장용
-LOG_SAVE_DIR = os.path.join(VISION_DIR, "logs", "Anomaly")
+# DB에 넣을 상대경로 (프로젝트 루트 기준)
+LOG_REL_DIR = os.path.join("data", "visions", "logs", "Anomaly")
+
+
+# 실제 파일 저장용 절대경로
+LOG_SAVE_DIR = os.path.join(BASE_DIR, LOG_REL_DIR)
+
 os.makedirs(LOG_SAVE_DIR, exist_ok=True)
 
 CLASSIFIER_WEIGHTS_PATH = os.path.join(
@@ -288,6 +293,7 @@ def run_anomaly_inspection_once():
 
     print("[SAVE] anomaly image saved:", save_path)
 
+    image_path = os.path.join("SynchroBots_WEB", LOG_REL_DIR)
     return {
         "module_type": module_type,
         "classification_confidence": classification_confidence,
@@ -295,5 +301,5 @@ def run_anomaly_inspection_once():
         "anomaly_score": anomaly_score,
         "decision": decision,
         "image_name": filename,
-        "image_path": save_path,
+        "image_path": image_path,
     }

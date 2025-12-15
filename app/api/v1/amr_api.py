@@ -48,7 +48,7 @@ def amr_mission_state():
 
         if status == "DONE":
             # 예: AGV가 작업 완료 → 다음 명령
-            # write_amr_go_move({"move_command": "go_home"})
+            write_amr_go_move({"move_command": "go_home"})
             return jsonify({"ok": True, "action": "mission_done"}), 200
 
         elif status == "PICK":

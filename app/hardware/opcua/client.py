@@ -67,14 +67,13 @@ async def run_single_session(client: Client):
 
     # namespace index 가져오기
     idx = await client.get_namespace_index(OPCUA_NAMESPACE_URI)
-
     node_info_map = {}
     nodes = []
 
     # config에 정의된 모든 노드 구독 준비
     for conf in SUBSCRIBE_NODES:
-        path = [p.format(idx=idx) for p in conf["browse_path"]]
-        node = await client.nodes.root.get_child(path)
+        path = conf["browse_path"]
+        node = client.get_node(path)
         nodes.append(node)
         node_info_map[node.nodeid] = conf
         print(f"[OPCUA] subscribe target: {conf['name']} -> {node}")

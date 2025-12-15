@@ -36,12 +36,6 @@
   border-color: rgba(56, 189, 248, 0.8);
 }
 
-/* Vision 로그 테이블: 컬럼 구조만 오버라이드 */
-.vision-log-table .log-header,
-.vision-log-table .log-row {
-  grid-template-columns: 70px 80px 90px 80px 1fr;
-}
-
 /* 행 hover / 선택 효과 */
 .vision-log-table .log-row {
   cursor: pointer;
@@ -225,6 +219,8 @@
 @media (max-width: 1080px) {
   .vision-summary-charts {
     flex-direction: column;
+    display: flex;
+    flex-direction: row;
   }
 }
 
@@ -246,9 +242,33 @@
 .vision-log-table .log-header,
 .vision-log-table .log-row {
   display: grid;
-  grid-template-columns: 70px 150px 90px 80px 1fr;  /* ← 컬럼 폭 넉넉하게 조정 */
+  grid-template-columns: 100px 150px 90px 100px 1fr;  /* ← 컬럼 폭 넉넉하게 조정 */
   align-items: center;
   padding: 4px 8px;
+  width: 100%;
+}
+
+/* 가운데 정렬이 자연스러운 컬럼 */
+.vision-log-table .log-header span:nth-child(1),
+.vision-log-table .log-row span:nth-child(1),
+.vision-log-table .log-header span:nth-child(3),
+.vision-log-table .log-row span:nth-child(3),
+.vision-log-table .log-header span:nth-child(4),
+.vision-log-table .log-row span:nth-child(4),
+.vision-log-table .log-header span:nth-child(5) {
+  text-align: center;
+}
+
+/* 상세 텍스트는 좌측 정렬 + 너무 길면 말줄임 */
+.vision-log-table .log-header span:nth-child(5),
+.vision-log-table .log-row span:nth-child(5) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vision-log-table .log-row span:nth-child(5){
+  text-align: left;
 }
 
 /* 행 hover / 선택 효과 */
@@ -331,4 +351,9 @@
 .chart-box {
   height: 200px;   /* 필요하면 160~220px 정도로 취향껏 조절 */
   width: 50%;
+}
+
+.chart-box canvas {
+  width: 100% !important;
+  height: 100% !important;
 }

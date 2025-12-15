@@ -10,17 +10,17 @@ from .config import OPCUA_SERVER_URL, OPCUA_NAMESPACE_URI
 
 # AMR
 AMR_NODE_ID = "ns=2;i=1"                 # 예시: AMR 관련 Object 노드
-AMR_GO_MOVE_METHOD_NODE_ID = "ns=2;i=15"        # 예시: write_amr_go_move 메서드 노드
-AMR_GO_POSITIONS_METHOD_NODE_ID = "ns=2;i=16"   # 예시: write_amr_go_positions 메서드 노드
+AMR_GO_MOVE_METHOD_NODE_ID = "ns=2;s=write_amr_go_move"        # 예시: write_amr_go_move 메서드 노드
+AMR_GO_POSITIONS_METHOD_NODE_ID = "ns=2;s=write_amr_go_positions"   # 예시: write_amr_go_positions 메서드 노드
 
 # ARM
 ARM_NODE_ID = "ns=2;i=3"                 # 예시: ARM 관련 Object 노드
-ARM_GO_MOVE_METHOD_NODE_ID = "ns=2;i=23"        # 예시: write_arm_go_move 메서드 노드
+ARM_GO_MOVE_METHOD_NODE_ID = "ns=2;s=write_arm_go_move"        # 예시: write_arm_go_move 메서드 노드
 
 # PLC
 PLC_NODE_ID = "ns=2;i=2"                 # 예시: PLC 관련 Object 노드
-PLC_OK_NG_METHOD_NODE_ID = "ns=2;i=19"          # 예시: write_ok_ng_value 메서드 노드
-PLC_READY_STATE_METHOD_NODE_ID = "ns=2;i=20"    # 예시: write_ready_state 메서드 노드
+PLC_OK_NG_METHOD_NODE_ID = "ns=2;s=write_ok_ng_value"          # 예시: write_ok_ng_value 메서드 노드
+PLC_READY_STATE_METHOD_NODE_ID = "ns=2;s=write_ready_state"    # 예시: write_ready_state 메서드 노드
 
 
 # ==============================================================

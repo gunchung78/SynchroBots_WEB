@@ -1,143 +1,487 @@
+/* ================================
+   Control Panel Page Layout
+   ================================ */
+
+:root {
+  --c-red:      #ef4444;  /* 정지 / 위험 */
+  --c-green:    #22c55e;  /* 정방향 / 정상 */
+  --c-blue:     #3b82f6;  /* 수동 시작 / 적용 */
+  --c-blue-dk:  #2563eb;  /* hover */
+  --c-amber:    #f59e0b;  /* 모드 / 전환 */
+  --c-amber-dk: #d97706;
+}
 
 /* 이 페이지에서 content 영역 그리드 비율 조정 */
 .control-content {
-    grid-template-columns: 1.5fr 1.2fr;
+  grid-template-columns: 1.5fr 1.2fr;
 }
 
 .section-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
 }
 
+/* ================================
+   Common Control Buttons (AGV/ARM/PLC)
+   ================================ */
+
 .btn-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-top: 4px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
 }
 
 button.control-btn {
-    border: none;
-    border-radius: 999px;
-    padding: 7px 14px;
-    font-size: 12px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition:
+  border: none;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition:
     transform 0.08s ease,
     box-shadow 0.08s ease,
     background 0.1s ease;
 }
 
 button.control-btn span.icon {
-    font-size: 14px;
+  font-size: 14px;
 }
 
 button.control-btn:active {
-    transform: translateY(1px);
-    box-shadow: none;
+  transform: translateY(1px);
+  box-shadow: none;
 }
 
 .btn-danger {
-    background: #ef4444;
-    color: #fee2e2;
-    box-shadow:
+  background: #ef4444;
+  color: #fee2e2;
+  box-shadow:
     0 0 0 1px rgba(248, 113, 113, 0.8),
     0 6px 18px rgba(127, 29, 29, 0.7);
 }
-.btn-danger:hover {
-    background: #dc2626;
-}
+.btn-danger:hover { background: #dc2626; }
 
 .btn-primary {
-    background: #3b82f6;
-    color: #eff6ff;
-    box-shadow:
+  background: #3b82f6;
+  color: #eff6ff;
+  box-shadow:
     0 0 0 1px rgba(59, 130, 246, 0.8),
     0 6px 18px rgba(30, 64, 175, 0.7);
 }
-.btn-primary:hover {
-    background: #2563eb;
-}
+.btn-primary:hover { background: #2563eb; }
 
 .btn-outline {
-    background: transparent;
-    color: #e5e7eb;
-    border-radius: 999px;
-    box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.7);
+  background: transparent;
+  color: #e5e7eb;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.7);
 }
-.btn-outline:hover {
-    background: rgba(15, 23, 42, 0.9);
-}
+.btn-outline:hover { background: rgba(15, 23, 42, 0.9); }
 
 .status-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 11px;
-    color: #9ca3af;
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #9ca3af;
 }
 .status-row span.value {
-    color: #e5e7eb;
-    font-weight: 600;
+  color: #e5e7eb;
+  font-weight: 600;
 }
 
-/* 제어 로그 영역 */
+/* ================================
+   Control Logs
+   ================================ */
+
 .log-box {
-    margin-top: 4px;
-    flex: 1;
-    border-radius: 10px;
-    background: #020617;
-    border: 1px solid rgba(55, 65, 81, 0.9);
-    padding: 8px;
-    font-size: 11px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+  margin-top: 4px;
+  flex: 1;
+  border-radius: 10px;
+  background: #020617;
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  padding: 8px;
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .log-line {
-    display: flex;
-    gap: 6px;
-    align-items: baseline;
-    color: #e5e7eb;
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  color: #e5e7eb;
 }
 
 .log-time {
-    color: #9ca3af;
-    font-size: 10px;
-    min-width: 52px;
+  color: #9ca3af;
+  font-size: 10px;
+  min-width: 52px;
 }
 
 .log-tag {
-    font-size: 10px;
-    padding: 1px 6px;
-    border-radius: 999px;
-    background: rgba(15, 23, 42, 0.9);
-    border: 1px solid rgba(148, 163, 184, 0.7);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.7);
 }
 
-.log-msg {
-    flex: 1;
-}
+.log-msg { flex: 1; }
 
 .log-box-empty {
-    color: #6b7280;
-    font-size: 11px;
-    text-align: center;
-    padding: 18px 4px;
+  color: #6b7280;
+  font-size: 11px;
+  text-align: center;
+  padding: 18px 4px;
 }
 
 .log-footer-info {
-    margin-top: 6px;
-    font-size: 10px;
-    color: #6b7280;
+  margin-top: 6px;
+  font-size: 10px;
+  color: #6b7280;
 }
 
+/* ================================
+   Responsive (Main)
+   ================================ */
+
 @media (max-width: 960px) {
-    .control-content {
-    grid-template-columns: 1fr;
-    }
+  .control-content { grid-template-columns: 1fr; }
+}
+
+/* ================================
+   Equipment List
+   ================================ */
+
+.equipment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.equipment-row {
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(55, 65, 81, 0.9);
+}
+
+.equipment-row .status-row { margin-bottom: 4px; }
+
+.status-offline {
+  opacity: 0.7;
+  color: #f97373;
+}
+
+/* ================================
+   Conveyor Panel (FINAL)
+   ================================ */
+
+.conveyor-card {
+  margin-top: 12px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  padding: 14px;
+  border-radius: 10px;
+
+  /* ---- Normalize Tokens ---- */
+  --cv-radius: 12px;
+  --cv-pad: 16px;
+  --cv-gap: 16px;
+
+  --cv-title: 14px;
+  --cv-text: 13px;
+
+  --cv-btn-h: 44px;
+  --cv-btn-font: 14px;
+
+  --cv-input-h: 38px;
+  --cv-input-font: 15px;
+}
+
+.conveyor-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--cv-gap);
+  align-items: stretch;
+}
+
+.conveyor-left,
+.conveyor-right {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+@media (max-width: 760px) {
+  .conveyor-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 520px) {
+  .conveyor-card {
+    --cv-pad: 14px;
+    --cv-btn-h: 42px;
+    --cv-input-h: 36px;
+  }
+}
+
+/* 공통 블록(좌/우 동일) + 내부 배치(위/아래)까지 여기서 통합 */
+.conveyor-left .conveyor-block,
+.conveyor-right .conveyor-block {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  background: rgba(2, 6, 23, 0.6);
+  border: 1px solid rgba(71, 85, 105, 0.9);
+  padding: var(--cv-pad);
+  border-radius: var(--cv-radius);
+  overflow: hidden;
+}
+
+.conveyor-left .block-title,
+.conveyor-right .block-title {
+  font-size: var(--cv-title);
+  font-weight: 700;
+  color: #e5e7eb;
+  margin-bottom: 12px;
+}
+
+/* ================================
+   Left: Belt State Buttons
+   ================================ */
+
+.belt-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.belt-btn {
+  flex: 1;
+  height: var(--cv-btn-h);
+  border-radius: 12px;
+  border: 1px solid #4b5563;
+  cursor: pointer;
+
+  background: #1f2937;
+  color: #e5e7eb;
+  font-size: var(--cv-btn-font);
+  font-weight: 700;
+
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: background 0.12s ease, transform 0.08s ease;
+}
+
+.belt-btn:hover { background: #374151; }
+.belt-btn:active { transform: translateY(1px); }
+
+/* 관례 색상 매핑 */
+.belt-btn.stop {
+  background: var(--c-red);
+  border-color: #b91c1c;
+  color: #fff;
+}
+
+.belt-btn.emergency {
+  background: var(--c-amber);
+  border-color: var(--c-amber-dk);
+  color: #111827;
+}
+
+.belt-btn.forward {
+  background: var(--c-green);
+  border-color: #16a34a;
+  color: #fff;
+}
+
+.belt-btn.reverse {
+  background: var(--c-blue-dk);
+  border-color: #1e40af;
+  color: #eaf2ff;
+}
+
+/* 수동시작 버튼 */
+.belt-start-row { margin-top: 6px; }
+
+.belt-start-btn {
+  width: 100%;
+  height: calc(var(--cv-btn-h) + 6px);
+  border-radius: 12px;
+
+  font-size: calc(var(--cv-btn-font) + 1px);
+  font-weight: 800;
+
+  padding: 0;
+  cursor: pointer;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: background 0.12s ease, transform 0.08s ease;
+}
+
+.belt-start-btn:active { transform: translateY(1px); }
+
+/* ================================
+   Right: Conveyor Params
+   ================================ */
+
+.conveyor-param-block {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 라벨 + 인풋 한 줄 */
+.param-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  margin-bottom: 12px;
+  font-size: var(--cv-text);
+  color: #e5e7eb;
+
+  min-width: 0;
+}
+
+.param-label {
+  margin-right: 8px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+/* 숫자 입력 박스 */
+.param-input {
+  height: var(--cv-input-h);
+  width: 100%;
+  max-width: 110px;
+  min-width: 0;
+  box-sizing: border-box;
+
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid #4b5563;
+  background: #0f172a;
+  color: #e5e7eb;
+
+  font-size: var(--cv-input-font);
+  text-align: right;
+}
+
+.param-input:focus {
+  outline: none;
+  border-color: var(--c-blue-dk);
+}
+
+/* 변경 적용 버튼 */
+.apply-btn {
+  margin-top: auto;
+  width: 100%;
+  height: calc(var(--cv-btn-h) + 6px);
+  padding: 0;
+
+  font-size: calc(var(--cv-btn-font) + 1px);
+  font-weight: 800;
+
+  border-radius: 12px;
+  cursor: pointer;
+
+  transition: background 0.12s ease, transform 0.08s ease;
+}
+
+.apply-btn:active { transform: translateY(1px); }
+
+/* 아주 좁은 화면에서는 라벨/입력 세로 배치 */
+@media (max-width: 520px) {
+  .param-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  .param-input { max-width: 100%; }
+}
+
+/* ================================
+   Shared Primary Buttons (Conveyor)
+   ================================ */
+
+.belt-start-btn,
+.apply-btn {
+  background: var(--c-blue);
+  border: 1px solid var(--c-blue-dk);
+  color: #eaf2ff;
+}
+
+.belt-start-btn:hover,
+.apply-btn:hover {
+  background: var(--c-blue-dk);
+}
+
+
+/* 선택 안 된 버튼: 비활성화 느낌 */
+.belt-btn.is-inactive {
+  opacity: 0.35;
+  filter: grayscale(0.6);
+  box-shadow: none;
+}
+
+/* 비활성 버튼 hover/active 무력화 */
+.belt-btn.is-inactive:hover {
+  background: inherit;
+}
+
+.belt-btn.is-inactive:active {
+  transform: none;
+}
+
+.log-pagination{
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.log-page-btn{
+  min-width: 34px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: rgba(15, 23, 42, 0.75);
+  color: #e5e7eb;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.log-page-btn:hover{
+  background: rgba(30, 41, 59, 0.9);
+}
+
+.log-page-btn.is-active{
+  border-color: rgba(59,130,246,0.85);
+  background: rgba(59,130,246,0.22);
+}
+
+.log-page-btn:disabled{
+  opacity: 0.45;
+  cursor: not-allowed;
 }

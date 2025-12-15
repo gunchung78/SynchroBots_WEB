@@ -10,6 +10,7 @@ const VISION_LIMIT = 8;       // 페이지당 행 수
 let VISION_TOTAL = 0;         // 전체 건수 (API total 기준)
 
 let visionAnomalyChart = null; // anomaly_score 라인차트 인스턴스
+let visionConfidenceChart = null; // ✅ confidence 막대차트
 
 // ======================
 //   이미지 URL 헬퍼
@@ -160,7 +161,7 @@ function createVisionRow(item) {
   // 1. 시간
   const colTime = document.createElement("span");
   const t = item.created_at || "";
-  colTime.textContent = t ? t.slice(11, 19) : "";
+  colTime.textContent = t ? t.slice(5, 19) : "";  // "2025-12-15 16:00:00" -> "12-15 16:00:00"
 
   // 2. 장비 (이름 > ID)
   const colEquip = document.createElement("span");
@@ -184,7 +185,8 @@ function createVisionRow(item) {
   if (item.module_type) {
     parts.push(item.module_type);
   }
-  if (typeof item.anomaly_score === "number") {
+  // score는 ANOMALY에서만 표시 (JOINT_DETECTION은 0.0000 더미라 제외)
+  if (item.mode === "ANOMALY" && typeof item.anomaly_score === "number") {
     parts.push(`score ${item.anomaly_score.toFixed(4)}`);
   }
   if (typeof item.classification_confidence === "number") {
@@ -328,6 +330,10 @@ function renderVisionAnomalyChart(chartData) {
   const rejectScores= chartData.reject_scores || [];
   const threshold   = typeof chartData.threshold === "number" ? chartData.threshold : null;
 
+  const totalCounts = chartData.total_counts || [];
+  const passCounts  = chartData.pass_counts || [];
+  const rejectCounts= chartData.reject_counts || [];
+
   // y축 스케일 계산 (score 값 + threshold 포함해서 적당한 범위)
   const allVals = []
     .concat(passScores.filter(v => typeof v === "number"))
@@ -391,9 +397,39 @@ function renderVisionAnomalyChart(chartData) {
       maintainAspectRatio: false,   // ✅ 부모 높이에 맞춰
       plugins: {
         legend: {
-          labels: {
-            color: "#e5e7eb",
-            font: { size: 11 },
+          labels: { color: "#e5e7eb", font: { size: 11 } },
+        },
+        tooltip: {
+          mode: "nearest",
+          intersect: true, // ✅ 선 위에서만 반응(원하면 false)
+          callbacks: {
+            // ✅ 날짜 대신 "해당 선의 카운트"만
+            title: (items) => {
+              if (!items || !items.length) return "";
+              const it = items[0];
+              const idx = it.dataIndex;
+              const dsLabel = (it.dataset.label || "").toUpperCase();
+
+              if (dsLabel.includes("PASS")) {
+                const c = passCounts[idx] ?? 0;
+                return `PASS 총 ${c}건`;
+              }
+              if (dsLabel.includes("REJECT")) {
+                const c = rejectCounts[idx] ?? 0;
+                return `REJECT 총 ${c}건`;
+              }
+              if (dsLabel.includes("THRESHOLD")) {
+                return "threshold";
+              }
+              return "";
+            },
+
+            // 값 표시(평균 score)
+            label: (ctx) => {
+              const v = ctx.raw;
+              if (v == null) return `${ctx.dataset.label}: N/A`;
+              return `${ctx.dataset.label}: ${Number(v).toFixed(3)}`;
+            },
           },
         },
       },
@@ -429,7 +465,7 @@ async function loadVisionStats() {
   params.set("mode", "ANOMALY");
 
   try {
-    const res = await fetch(`/api/v1/vision/stats?${params.toString()}`);
+    const res = await fetch(`/api/v1/vision/stats?mode=ANOMALY&limit_days=5`)
     if (!res.ok) {
       console.error("failed to fetch vision stats", res.status);
       return;
@@ -460,6 +496,8 @@ document.addEventListener("DOMContentLoaded", () => {
     VISION_PAGE = page;
     loadVisionLogs(page);   // 목록
     loadVisionStats();      // 요약/차트
+    loadVisionConfidenceStats(); // confidence 막대차트
+
   }
 
   // 필터 변경 시: 페이지 1로 리셋 + 로그/통계 재조회
@@ -496,3 +534,96 @@ document.addEventListener("DOMContentLoaded", () => {
   // 첫 로딩: 1페이지 + 통계
   reloadPage(1);
 });
+
+
+function renderVisionConfidenceChart(chartData) {
+  const canvas = document.getElementById("visionFutureChart");
+  if (!canvas) return;
+
+  const labels = chartData.labels || [];
+  const anomaly = chartData.anomaly_cls_avg || [];
+  const jointCls = chartData.joint_cls_avg || [];
+
+  const anomalyCounts = chartData.anomaly_counts || [];
+  const jointCounts = chartData.joint_counts || [];
+
+  if (visionConfidenceChart) {
+    visionConfidenceChart.destroy();
+    visionConfidenceChart = null;
+  }
+
+  const ctx = canvas.getContext("2d");
+
+  visionConfidenceChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { label: "ANOMALY", data: anomaly },
+        { label: "JOINT (CLS)", data: jointCls },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: "#e5e7eb", font: { size: 11 } } },
+        tooltip: {
+          mode: "nearest",
+          intersect: true, // ✅ 막대 위에서만 반응(원하면 false로)
+          callbacks: {
+            // ✅ 날짜 대신 "해당 막대의 카운트"만
+            title: (items) => {
+              if (!items || !items.length) return "";
+              const it = items[0];
+              const idx = it.dataIndex;
+              const dsLabel = (it.dataset.label || "").toUpperCase();
+
+              if (dsLabel.includes("ANOM")) {
+                const c = anomalyCounts[idx] ?? 0;
+                return `ANOMALY 총 ${c}건`;
+              }
+              if (dsLabel.includes("JOINT")) {
+                const c = jointCounts[idx] ?? 0;
+                return `JOINT 총 ${c}건`;
+              }
+              return "";
+            },
+            // ✅ 본문은 confidence만 (원하면 여기서도 카운트 같이 붙일 수 있음)
+            label: (c) => {
+              const v = c.raw;
+              if (v == null) return `${c.dataset.label}: N/A`;
+              return `${c.dataset.label}: ${(v * 100).toFixed(2)}%`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: { color: "#9ca3af", font: { size: 10 } },
+          grid: { color: "rgba(31, 41, 55, 0.8)" },
+        },
+        y: {
+          beginAtZero: true,
+          suggestedMax: 1.0,
+          ticks: {
+            color: "#9ca3af",
+            font: { size: 10 },
+            callback: (v) => `${Math.round(v * 100)}%`,
+          },
+          grid: { color: "rgba(31, 41, 55, 0.8)" },
+        },
+      },
+    },
+  });
+}
+
+async function loadVisionConfidenceStats() {
+  const res = await fetch("/api/v1/vision/confidence_stats");
+  if (!res.ok) {
+    console.error("failed to fetch confidence stats", res.status);
+    return;
+  }
+  const data = await res.json();
+  renderVisionConfidenceChart((data && data.chart) || {});
+}

@@ -1,7 +1,7 @@
 # app/models/dashboard.py
 from app import db
 from datetime import datetime
-
+from sqlalchemy.sql import func
 
 class ControlLog(db.Model):
     __tablename__ = "control_logs"
@@ -35,11 +35,12 @@ class ControlLog(db.Model):
         default="SUCCESS"
     )
     result_message = db.Column(db.Text, nullable=True)
+    trigger_event = db.Column(db.String(64), nullable=True, comment="명령 발생 트리거")
 
     created_at = db.Column(
         db.DateTime(timezone=True),
         nullable=False,
-        default=datetime.utcnow
+        server_default=func.current_timestamp()
     )
 
     equipment = db.relationship(
@@ -80,7 +81,7 @@ class EventLog(db.Model):
     equipment_type = db.Column(db.String(16), nullable=False)
     level = db.Column(db.String(8), nullable=False)
     message = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False,server_default=func.current_timestamp())
 
     equipment = db.relationship("EquipmentInfo", backref="events_logs")
 
@@ -95,8 +96,8 @@ class EquipmentInfo(db.Model):
     is_online = db.Column(db.Boolean, nullable=False, default=False)
     status = db.Column(db.String(32))
     last_seen_at = db.Column(db.DateTime(timezone=True))
-    created_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    created_at = db.Column(db.DateTime(timezone=True), server_default=func.current_timestamp())
+    updated_at = db.Column(db.DateTime(timezone=True), server_default=func.current_timestamp())   
 
     def to_dict(self):
         return {
@@ -139,7 +140,7 @@ class MissionLog(db.Model):
     created_at = db.Column(
         db.DateTime(timezone=True),
         nullable=False,
-        default=datetime.utcnow,
+        server_default=func.current_timestamp()
     )
 
     equipment = db.relationship(
@@ -162,6 +163,24 @@ class MissionLog(db.Model):
                 if self.created_at else None
             ),
         }
+    
+class MissionRobotArmLog(db.Model):
+    __tablename__ = "mission_robotarm_logs"
+    log_arm_id = db.Column(db.BigInteger, primary_key=True)
+    mission_id = db.Column(
+        db.BigInteger,
+        db.ForeignKey("mission_logs.mission_id"),
+        nullable=False
+    )
+    action_type = db.Column(db.Enum(
+        "HOME","MOVE","PICK","PLACE","GRIPPER_OPEN",
+        "GRIPPER_CLOSE","WAIT","ERROR"
+    ))
+    target_pose = db.Column(db.String(255))
+    result_status = db.Column(db.Enum("SUCCESS","FAIL","TIMEOUT"))
+    result_message = db.Column(db.Text)
+    created_at = db.Column(db.DateTime)
+    module_type = db.Column(db.String(48))
 
 
 class MissionPlcLog(db.Model):
@@ -182,7 +201,7 @@ class MissionPlcLog(db.Model):
     created_at = db.Column(
         db.DateTime(timezone=True),
         nullable=False,
-        default=datetime.utcnow,
+        server_default=func.current_timestamp()
     )
 
     equipment = db.relationship(
@@ -218,7 +237,7 @@ class Map(db.Model):
     created_at = db.Column(
         db.DateTime(timezone=True),
         nullable=False,
-        default=datetime.utcnow,
+        server_default=func.current_timestamp(),
     )
 
     def to_dict(self):
@@ -281,7 +300,7 @@ class AmrStateLog(db.Model):
     updated_at = db.Column(
         db.DateTime(timezone=True),
         nullable=False,
-        default=datetime.utcnow,
+        server_default=func.current_timestamp(),
     )
 
     equipment = db.relationship(

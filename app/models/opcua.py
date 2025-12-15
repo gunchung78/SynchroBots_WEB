@@ -1,4 +1,4 @@
-# app/models/dashboard.py
+# app/models/opcua.py
 from app import db
 from datetime import datetime
 
@@ -56,7 +56,6 @@ class MissionCameraLog(db.Model):
     created_at = db.Column(
         db.DateTime,
         nullable=False,
-        default=datetime.utcnow,
         server_default=db.func.current_timestamp(),
     )
 

@@ -22,11 +22,9 @@ def create_app():
     # 모델 import (FK나 관계가 있으면 반드시 init 후 import)
     from app.models import dashboard
 
-     # ───────── Web UI Blueprints ──────
-    from app.web.dashboard import dashboard_bp
-    app.register_blueprint(dashboard_bp)
-    from app.web.vision import vision_bp
-    app.register_blueprint(vision_bp, url_prefix="/vision")
+    # ───────── Web UI Blueprint ─────────
+    from app.web import web_bp
+    app.register_blueprint(web_bp, url_prefix="")  # url_prefix="" (루트에 매핑)
 
     # ───────── API Blueprints ─────────
     from app.api.v1.plc_api import plc_api_bp
@@ -37,6 +35,8 @@ def create_app():
     app.register_blueprint(arm_api_bp, url_prefix="/api/v1/arm")     
     from app.api.v1.vision_api import vision_api_bp
     app.register_blueprint(vision_api_bp, url_prefix="/api/v1/vision")     
+    from app.api.v1.control_api import control_api_bp
+    app.register_blueprint(control_api_bp, url_prefix="/api/v1/control")     
 
 
     from app.api.v1.dashboard_api import dashboard_api_bp

@@ -20,6 +20,10 @@
     </div>
   </div>
 {% endblock %}
+{% block header_right %}
+  {# 토글 버튼은 base.html 에 이미 있음. 여기서는 오른쪽 뱃지만 교체 #}
+  <span class="badge">VISION LOG</span>
+{% endblock %}
 
 {% block content %}
 
@@ -35,7 +39,7 @@
         <div>
           <div class="card-title">Vision 검사 요약</div>
         </div>
-        <span class="pill">최근 N건 기준</span>
+        <span class="pill">최근 5건(일별) 기준</span>
       </div>
 
       {# 필요하다면 위에 칩(전체 건수 / PASS 비율 등)을 넣을 수도 있음 #}
@@ -46,16 +50,16 @@
       <div class="vision-summary-charts">
         <div class="chart-box">
           <div class="card-sub chart-caption">
-            ANOMALY PASS / REJECT 평균
+            ANOMALY PASS / REJECT Score
           </div>
           <canvas id="visionAnomalyChart" height="90"></canvas>
         </div>
 
         <div class="chart-box">
           <div class="card-sub chart-caption">
-            추가 분석 차트 (준비중)
+            classification 신뢰도 추이
           </div>
-          <canvas id="visionFutureChart" height="90"></canvas>
+          <canvas id="visionFutureChart"></canvas>
         </div>
       </div>
     </section>
