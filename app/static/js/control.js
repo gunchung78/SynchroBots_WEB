@@ -7,9 +7,9 @@
 const logBox = document.getElementById("log-box");
 const pagerEl = document.getElementById("log-pagination");
 
-let LOG_LIMIT = 25;
+let LOG_LIMIT = 22;
 let LOG_PAGE = 1;          // 1부터
-let LOG_GROUP_SIZE = 10;   // 한 번에 보일 페이지 버튼 개수(1~10, 11~20...)
+let LOG_GROUP_SIZE = 8;   // 한 번에 보일 페이지 버튼 개수(1~10, 11~20...)
 
 // trigger_event / action_type 을 사람이 읽을 수 있는 문구로 바꾸는 헬퍼
 function resolveActionLabelFromLog(log) {

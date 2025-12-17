@@ -59,12 +59,12 @@ def arm_img():
         cls_conf = float(payload.get("classification_confidence") or 0.0)
         status = payload.get("status")                            # 예: "arm_mission_success"
         base64_img_str = payload.get("img")                       # 매우 긴 base64 문자열
-        pick_coord = payload.get("pick_coord")
+        pick_coord = json.dumps(payload["pick_coord"], ensure_ascii=False)
         img_name = None
         img_path = None
 
         # -----------------------------
-        # 2) 이미지 복원 및 파일 저장
+        # 2) 이미지 복원 및 파일 저장ㅜ
         # -----------------------------
         if base64_img_str:
             try:

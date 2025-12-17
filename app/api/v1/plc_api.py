@@ -35,7 +35,7 @@ def conveyor_sensor_check():
         #         "ok": True,
         #         "action": "conveyor_sensor_triggered",
         #         "vision": {
-        #             "test": ,
+        #             "test": 'test',
         #         },
         #     }
         # ), 200

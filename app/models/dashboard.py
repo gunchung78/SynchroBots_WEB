@@ -69,22 +69,6 @@ class ControlLog(db.Model):
         }
     
 
-class EventLog(db.Model):
-    __tablename__ = "events_logs"
-
-    event_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    equipment_id = db.Column(
-        db.String(32),
-        db.ForeignKey("equipment_info.equipment_id"),
-        nullable=False,
-    )
-    equipment_type = db.Column(db.String(16), nullable=False)
-    level = db.Column(db.String(8), nullable=False)
-    message = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False,server_default=func.current_timestamp())
-
-    equipment = db.relationship("EquipmentInfo", backref="events_logs")
-
 
 class EquipmentInfo(db.Model):
     __tablename__ = "equipment_info"
@@ -122,21 +106,12 @@ class MissionLog(db.Model):
         db.ForeignKey("equipment_info.equipment_id"),
         nullable=True,
     )
-    equipment_type = db.Column(
-        db.Enum("AMR", "PLC", "ARM", "HMI", "VISION"),
-        nullable=False,
-    )
-    module_type = db.Column(db.String(64), nullable=False)
+
     status = db.Column(
         db.Enum("WAITING", "RUNNING", "DONE", "ERROR"),
         nullable=False,
     )
-    description = db.Column(db.String(255), nullable=True)
-    # mission_logs 테이블에 source 컬럼을 이미 추가해둔 상태라면 다음 라인 사용
-    source = db.Column(
-        db.Enum("PLC", "WEB", "API"),
-        nullable=True,
-    )
+
     created_at = db.Column(
         db.DateTime(timezone=True),
         nullable=False,
@@ -153,11 +128,7 @@ class MissionLog(db.Model):
         return {
             "mission_id": self.mission_id,
             "equipment_id": self.equipment_id,
-            "equipment_type": self.equipment_type,
-            "module_type": self.module_type,
             "status": self.status,
-            "description": self.description,
-            "source": self.source,
             "created_at": (
                 self.created_at.strftime("%Y-%m-%d %H:%M:%S")
                 if self.created_at else None
@@ -181,6 +152,23 @@ class MissionRobotArmLog(db.Model):
     result_message = db.Column(db.Text)
     created_at = db.Column(db.DateTime)
     module_type = db.Column(db.String(48))
+    description = db.Column(db.String(255), nullable=True)
+
+    def to_dict(self):
+        return {
+            "log_arm_id": self.log_arm_id,
+            "mission_id": self.mission_id,
+            "action_type": self.action_type,
+            "target_pose": self.target_pose,
+            "result_status": self.result_status,
+            "result_message": self.result_message,
+            "module_type": self.module_type,
+            "description": self.description,
+            "created_at": (
+                self.created_at.strftime("%Y-%m-%d %H:%M:%S")
+                if self.created_at else None
+            ),
+        }
 
 
 class MissionPlcLog(db.Model):

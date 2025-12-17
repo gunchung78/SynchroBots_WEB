@@ -9,10 +9,10 @@ import json, time
 from app.models.dashboard import (
     ControlLog,
     EquipmentInfo,
-    EventLog,
     Map,
     AmrStateLog,
 )
+
 
 from PIL import Image
 import numpy as np
@@ -246,62 +246,13 @@ def get_control_logs():
         "items": [log.to_dict() for log in logs]
     })
 
-@dashboard_api_bp.route("/events_logs", methods=["GET"])
-def get_events():
-    """
-    대시보드 이벤트 로그용 API
-    GET /api/v1/events?limit=10
-    """
-    try:
-        limit = request.args.get("limit", default=10, type=int)
-        if not limit or limit < 1:
-            limit = 10
-        if limit > 100:
-            limit = 100
 
-        # 최신순으로 EquipmentInfo와 조인해서 가져오기
-        q = (
-            db.session.query(EventLog, EquipmentInfo)
-            .join(EquipmentInfo, EventLog.equipment_id == EquipmentInfo.equipment_id)
-            .order_by(EventLog.created_at.desc())
-            .limit(limit)
-        )
-
-        items = []
-        for ev, eq in q.all():
-            items.append(
-                {
-                    "event_id": ev.event_id,
-                    "equipment_id": ev.equipment_id,
-                    "equipment_type": ev.equipment_type,
-                    "level": ev.level,
-                    "message": ev.message,
-                    "created_at": ev.created_at.isoformat(sep=" ", timespec="seconds")
-                    if ev.created_at
-                    else None,
-                    "equipment": {
-                        "equipment_id": eq.equipment_id,
-                        "equipment_name": eq.equipment_name,
-                        "equipment_type": eq.equipment_type,
-                        "location": eq.location,
-                    }
-                    if eq
-                    else None,
-                }
-            )
-
-        return jsonify({"items": items, "count": len(items)}), 200
-
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 500
-    
+from sqlalchemy import text
 
 @dashboard_api_bp.route("/mission_logs", methods=["GET"])
 def get_mission_logs():
     """
-    미션 로그(mission_logs) + PLC 미션 로그(mission_plc_logs)를 합쳐서
-    장비(equipment_id)별로 가장 최신 1건만 반환하는 API.
+    장비(equipment_id)별 가장 최신 1건(PLC + AMR/ARM) 반환
 
     GET /api/v1/dashboard/mission_logs?limit=5
     """
@@ -310,55 +261,119 @@ def get_mission_logs():
 
         sql = text("""
         SELECT
-            x.equipment_id,
-            x.equipment_type,
-            x.status,
-            x.description,
-            x.source,
-            x.created_at,
-            ei.equipment_name
+          r.equipment_id,
+          r.equipment_type,
+          r.action_type,
+          r.status,
+          r.description,
+          r.created_at,
+          ei.equipment_name
         FROM (
-            -- 1) PLC 쪽 미션 로그
+          /* =========================
+             1) PLC : equipment_id별 최신 1건
+             ========================= */
+          SELECT
+            mpl.equipment_id,
+            'PLC' AS equipment_type,
+            'IO' AS action_type,
+            'RUNNING' AS status,
+            mpl.description AS description,
+            mpl.created_at AS created_at
+          FROM mission_plc_logs mpl
+          JOIN (
+            SELECT equipment_id, MAX(created_at) AS max_created_at
+            FROM mission_plc_logs
+            GROUP BY equipment_id
+          ) p_latest
+            ON p_latest.equipment_id = mpl.equipment_id
+           AND p_latest.max_created_at = mpl.created_at
+
+          UNION ALL
+
+          /* =========================
+             2) AMR/ARM : (미션별 첫 세부로그) 중 equipment_id별 최신 1건
+             ========================= */
+          SELECT
+            t.equipment_id,
+            t.equipment_type,
+            t.action_type,
+            t.status,
+            t.description,
+            t.created_at
+          FROM (
+            /* ---- AMR: mission_id별 첫 세부로그 ---- */
             SELECT
-                mpl.equipment_id               AS equipment_id,
-                'PLC'                          AS equipment_type,
-                NULL                           AS status,
-                mpl.description                AS description,
-                mpl.source                     AS source,
-                mpl.created_at                 AS created_at
-            FROM mission_plc_logs AS mpl
+              ml.equipment_id,
+              'AMR' AS equipment_type,
+              mal.action_type AS action_type,
+              ml.status AS status,
+              COALESCE(
+                mal.description,
+                CONCAT(COALESCE(mal.source_station, '-'), ' → ', COALESCE(mal.target_station, '-'))
+              ) AS description,
+              mal.created_at
+            FROM mission_logs ml
+            JOIN mission_amr_logs mal
+              ON mal.mission_id = ml.mission_id
+            WHERE mal.created_at = (
+              SELECT MIN(mal2.created_at)
+              FROM mission_amr_logs mal2
+              WHERE mal2.mission_id = ml.mission_id
+            )
 
             UNION ALL
 
-            -- 2) 일반 미션 로그
+            /* ---- ARM: mission_id별 첫 세부로그 ---- */
             SELECT
-                ml.equipment_id                AS equipment_id,
-                ml.equipment_type              AS equipment_type,
-                ml.status                      AS status,
-                ml.description                 AS description,
-                ml.source                      AS source,
-                ml.created_at                  AS created_at
-            FROM mission_logs AS ml
-        ) AS x
-        JOIN (
-            -- 장비별 최신 created_at만 뽑기
+              ml.equipment_id,
+              'ARM' AS equipment_type,
+              CONCAT(mrl.action_type, '(', COALESCE(mrl.module_type, ''), ')') AS action_type,
+              ml.status AS status,
+              COALESCE(mrl.description, mrl.target_pose) AS description,
+              mrl.created_at
+            FROM mission_logs ml
+            JOIN mission_robotarm_logs mrl
+              ON mrl.mission_id = ml.mission_id
+            WHERE mrl.created_at = (
+              SELECT MIN(mrl2.created_at)
+              FROM mission_robotarm_logs mrl2
+              WHERE mrl2.mission_id = ml.mission_id
+            )
+          ) t
+          JOIN (
+            /* 동일 기준으로 equipment_id별 최신 1건 */
             SELECT
-                equipment_id,
-                MAX(created_at) AS max_created_at
+              equipment_id,
+              MAX(created_at) AS max_created_at
             FROM (
-                SELECT equipment_id, created_at
-                FROM mission_plc_logs
-                UNION ALL
-                SELECT equipment_id, created_at
-                FROM mission_logs
-            ) t
+              SELECT ml.equipment_id, mal.created_at
+              FROM mission_logs ml
+              JOIN mission_amr_logs mal ON mal.mission_id = ml.mission_id
+              WHERE mal.created_at = (
+                SELECT MIN(mal2.created_at)
+                FROM mission_amr_logs mal2
+                WHERE mal2.mission_id = ml.mission_id
+              )
+
+              UNION ALL
+
+              SELECT ml.equipment_id, mrl.created_at
+              FROM mission_logs ml
+              JOIN mission_robotarm_logs mrl ON mrl.mission_id = ml.mission_id
+              WHERE mrl.created_at = (
+                SELECT MIN(mrl2.created_at)
+                FROM mission_robotarm_logs mrl2
+                WHERE mrl2.mission_id = ml.mission_id
+              )
+            ) x
             GROUP BY equipment_id
-        ) latest
-          ON latest.equipment_id = x.equipment_id
-         AND latest.max_created_at = x.created_at
+          ) latest
+            ON latest.equipment_id = t.equipment_id
+           AND latest.max_created_at = t.created_at
+        ) r
         LEFT JOIN equipment_info ei
-          ON ei.equipment_id = x.equipment_id
-        ORDER BY x.created_at DESC
+          ON ei.equipment_id = r.equipment_id
+        ORDER BY r.created_at DESC
         LIMIT :limit
         """)
 
@@ -374,12 +389,11 @@ def get_mission_logs():
 
             items.append({
                 "equipment_id": row["equipment_id"],
-                "equipment_type": row["equipment_type"],
-                "status": row["status"],
+                "equipment_type": row["equipment_type"],   # PLC / AMR / ARM
+                "action_type": row["action_type"],         # PLC=IO, ARM=PLACE(...), AMR=...
+                "status": row["status"],                   # RUNNING / WAITING / DONE / ERROR
                 "description": row["description"],
-                "source": row["source"],
                 "created_at": created_str,
-                # 프론트에서 m.equipment?.equipment_name 로 쓰기 좋게 nested 구조
                 "equipment": {
                     "equipment_id": row["equipment_id"],
                     "equipment_name": row["equipment_name"],
@@ -391,6 +405,7 @@ def get_mission_logs():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
     
 @dashboard_api_bp.route("/amr_states", methods=["GET"])
 def get_latest_amr_states():
@@ -439,6 +454,249 @@ def get_latest_amr_states():
         return jsonify({
             "items": items,
             "count": len(items)
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+    
+@dashboard_api_bp.route("/amr_summary", methods=["GET"])
+def get_amr_summary():
+    """
+    상단 chip-row용 AMR 요약:
+    - equipment_info: equipment_name, status, location
+    - 최근 미션 1건: target_station, action_type
+    """
+    try:
+        sql = text("""
+        SELECT
+          e.equipment_id,
+          e.equipment_name,
+          e.status,
+          e.location,
+          mm.target_station,
+          mm.action_type,
+          mm.misiion_status
+        FROM equipment_info e
+        LEFT JOIN (
+          SELECT
+            m.equipment_id,
+            am.target_station,
+            am.action_type,
+            m.status as misiion_status
+          FROM mission_logs m
+          JOIN mission_amr_logs am
+            ON m.mission_id = am.mission_id
+          ORDER BY am.created_at DESC
+          LIMIT 1
+        ) mm
+          ON e.equipment_id = mm.equipment_id
+        WHERE LOWER(e.equipment_id) LIKE 'amr%'
+        ORDER BY e.equipment_id ASC
+        """)
+
+        rows = db.session.execute(sql).mappings().all()
+
+        items = []
+        for r in rows:
+            items.append({
+                "equipment_id": r["equipment_id"],
+                "equipment_name": r["equipment_name"],
+                "status": r["status"],              # 예: RUN / IDLE 등 (equipment_info 기준)
+                "location": r["location"],          # 예: PICK-ST01
+                "misiion_status" : r["misiion_status"],
+                "target_station": r["target_station"],  # 예: ST-03
+                "action_type": r["action_type"],        # 예: UNLOADING 등
+            })
+
+        return jsonify({"count": len(items), "items": items}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+@dashboard_api_bp.route("/vision_mixed", methods=["GET"])
+def get_dashboard_vision_mixed():
+    """
+    대시보드 우측 혼합차트용:
+    - 최근 날짜 기준 5일 (데이터 있는 날짜)
+    - Bar: classification_confidence 전체 평균(ANOMALY/JOINT 합산)
+    - Line: PASS/REJECT 비율 (UNKNOWN 제외)
+    """
+    try:
+        limit_days = _get_limit(default=5, max_limit=30)
+
+        sql = text("""
+        SELECT
+          t.day AS day,
+
+          t.avg_confidence AS avg_confidence,
+
+          CASE
+            WHEN (t.pass_cnt + t.reject_cnt) > 0
+            THEN t.pass_cnt / (t.pass_cnt + t.reject_cnt)
+            ELSE NULL
+          END AS pass_rate,
+
+          CASE
+            WHEN (t.pass_cnt + t.reject_cnt) > 0
+            THEN t.reject_cnt / (t.pass_cnt + t.reject_cnt)
+            ELSE NULL
+          END AS reject_rate,
+
+          t.total_cnt AS total_cnt,
+          t.pass_cnt  AS pass_cnt,
+          t.reject_cnt AS reject_cnt
+
+        FROM (
+          SELECT
+            d.day AS day,
+
+            COUNT(*) AS total_cnt,
+            SUM(mcl.decision = 'PASS')   AS pass_cnt,
+            SUM(mcl.decision = 'REJECT') AS reject_cnt,
+
+            AVG(mcl.classification_confidence) AS avg_confidence
+
+          FROM (
+            SELECT DATE(created_at) AS day
+            FROM mission_camera_logs
+            GROUP BY DATE(created_at)
+            ORDER BY day DESC
+            LIMIT :limit_days
+          ) d
+          JOIN mission_camera_logs mcl
+            ON DATE(mcl.created_at) = d.day
+          WHERE mcl.classification_confidence IS NOT NULL
+          GROUP BY d.day
+        ) t
+        ORDER BY t.day ASC;
+        """)
+
+        rows = db.session.execute(sql, {"limit_days": limit_days}).mappings().all()
+
+        labels = []
+        avg_conf = []
+        pass_rate = []
+        reject_rate = []
+        total_cnt = []
+        pass_cnt = []
+        reject_cnt = []
+
+        for r in rows:
+            # DATE()는 보통 date 객체로 내려옴
+            d = r["day"].strftime("%Y-%m-%d") if r["day"] else None
+            labels.append(d)
+
+            avg_conf.append(float(r["avg_confidence"]) if r["avg_confidence"] is not None else None)
+            pass_rate.append(float(r["pass_rate"]) if r["pass_rate"] is not None else None)
+            reject_rate.append(float(r["reject_rate"]) if r["reject_rate"] is not None else None)
+
+            total_cnt.append(int(r["total_cnt"] or 0))
+            pass_cnt.append(int(r["pass_cnt"] or 0))
+            reject_cnt.append(int(r["reject_cnt"] or 0))
+
+        return jsonify({
+            "chart": {
+                "labels": labels,
+                "avg_confidence": avg_conf,     # bar
+                "pass_rate": pass_rate,         # line1
+                "reject_rate": reject_rate,     # line2
+                "counts": {
+                    "total": total_cnt,
+                    "pass": pass_cnt,
+                    "reject": reject_cnt,
+                }
+            },
+            "meta": {
+                "window_type": "recent_days_with_data",
+                "limit_days": limit_days,
+            }
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+    
+
+@dashboard_api_bp.route("/vision_anomaly_modules", methods=["GET"])
+def get_dashboard_vision_anomaly_modules():
+    """
+    좌측 Bar 차트용 (A안):
+    - 최근 '데이터가 존재하는 날짜' 기준 5일
+    - mode='ANOMALY' AND module_type 기준으로 PASS/REJECT 건수 집계 (UNKNOWN 제외)
+    - Chart.js 그룹 바(pass/reject 2개 막대)용 데이터 제공
+    """
+    try:
+        LIMIT_DAYS = 5  # ✅ 하드코딩
+
+        sql = text("""
+        SELECT
+          t.module_type AS module_type,
+          SUM(t.decision = 'PASS')   AS pass_cnt,
+          SUM(t.decision = 'REJECT') AS reject_cnt,
+          COUNT(*) AS total_cnt
+        FROM (
+          SELECT DATE(created_at) AS day
+          FROM mission_camera_logs
+          WHERE mode = 'ANOMALY'
+            AND module_type IS NOT NULL
+            AND module_type <> ''
+          GROUP BY DATE(created_at)
+          ORDER BY day DESC
+          LIMIT :limit_days
+        ) d
+        JOIN mission_camera_logs t
+          ON DATE(t.created_at) = d.day
+        WHERE t.mode = 'ANOMALY'
+          AND t.module_type IS NOT NULL
+          AND t.module_type <> ''
+          AND t.decision IN ('PASS','REJECT')   -- ✅ UNKNOWN 제외
+        GROUP BY t.module_type
+        ORDER BY total_cnt DESC, pass_cnt DESC;
+        """)
+
+        rows = db.session.execute(sql, {"limit_days": LIMIT_DAYS}).mappings().all()
+
+        labels = []
+        pass_counts = []
+        reject_counts = []
+        totals = []
+
+        total_all = 0
+        pass_all = 0
+        reject_all = 0
+
+        for r in rows:
+            mt = r["module_type"]
+            p = int(r["pass_cnt"] or 0)
+            ng = int(r["reject_cnt"] or 0)
+            tot = int(r["total_cnt"] or 0)
+
+            labels.append(mt)
+            pass_counts.append(p)
+            reject_counts.append(ng)
+            totals.append(tot)
+
+            total_all += tot
+            pass_all += p
+            reject_all += ng
+
+        return jsonify({
+            "chart": {
+                "labels": labels,
+                "pass_counts": pass_counts,
+                "reject_counts": reject_counts,
+                "totals": totals
+            },
+            "meta": {
+                "limit_days": LIMIT_DAYS,
+                "mode": "ANOMALY",
+                "total": total_all,
+                "pass_total": pass_all,
+                "reject_total": reject_all
+            }
         }), 200
 
     except Exception as e:

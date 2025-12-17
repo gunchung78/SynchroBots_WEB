@@ -50,7 +50,7 @@ class MissionCameraLog(db.Model):
     )
 
     # 픽업 좌표 (나중에 mycobot coord 연동 시 사용)
-    pick_coord = db.Column(db.Float)
+    pick_coord = db.Column(db.String(64))
 
     # 생성 시각
     created_at = db.Column(

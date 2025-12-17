@@ -5,8 +5,7 @@
 }
 
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: #0f172a;
   color: #e5e7eb;
 }
@@ -18,7 +17,6 @@ body {
 }
 
 /* 헤더 */
-
 .header {
   padding: 14px 24px;
   border-bottom: 1px solid rgba(148, 163, 184, 0.4);
@@ -48,34 +46,15 @@ body {
 }
 
 /* 메인 레이아웃 */
-
-/* .content {
-  flex: 1;
-  padding: 18px 22px 22px;
-  display: grid;
-  grid-template-columns: 1.8fr 1.2fr;
-  gap: 18px;
-} */
 .content {
   flex: 1;
   padding: 18px 22px 22px;
   display: grid;
-
-  /* 1열: 고정 폭(AGV 맵 카드), 2열: 남는 영역 */
   grid-template-columns: 640px minmax(360px, 1fr);
-
   gap: 18px;
-
-  /* 전체를 가운데로 모아주기 (양옆 여백 균등) */
-  /* justify-content: center; */
-
-  /* 너무 넓은 모니터에서 가운데로 묶기 */
-  /* max-width: 100%; */
-  /* margin: 0 auto; */
 }
 
 /* 카드 공통 */
-
 .card {
   background: #020617;
   border-radius: 14px;
@@ -112,47 +91,35 @@ body {
 }
 
 /* 좌측/우측 컬럼 */
-
-.left-column {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  /* max-width: 640px; */
-}
-
+.left-column,
 .right-column {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-/* === AGV 맵 고정 캔버스 설정 === */
-
-/* 카드 안에서 가운데 정렬 */
+/* === AGV 맵 === */
 .card-map {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-/* 고정 사이즈 캔버스: 여기 크기를 좌표계 기준으로 사용 */
 .agv-map {
   position: relative;
-  width: 600px;   /* 🔧 원하는 기준 사이즈 */
-  height: 400px;  /* 🔧 위와 세트로 맞춰주면 됨 */
-  margin: 4px auto 0;  /* 가운데 정렬 */
+  width: 600px;
+  height: 400px;
+  margin: 4px auto 0;
   border-radius: 12px;
   background: radial-gradient(circle at top left, #1d4ed8 0, #020617 55%);
   border: 1px solid rgba(59, 130, 246, 0.4);
   overflow: hidden;
-  flex: 0 0 auto;  /* 화면이 줄어도 이 크기 유지 */
+  flex: 0 0 auto;
 }
 
-/* 맵 이미지 영역: 고정 캔버스 안을 100% 채우도록 */
 .agv-map-wrap {
   position: absolute;
-  inset: 14px 20px 20px 20px;  /* 안쪽 여백은 그대로 사용 */
-  padding: 0;
+  inset: 14px 20px 20px 20px;
   box-sizing: border-box;
 }
 
@@ -166,49 +133,24 @@ body {
   background-size: contain;
 }
 
-/* 그리드/경로도 동일 캔버스 기준으로 */
 .map-grid {
   position: absolute;
   inset: 14px 20px 20px 20px;
-  background-image: linear-gradient(
-      to right,
-      rgba(148, 163, 184, 0.08) 1px,
-      transparent 1px
-    ),
+  background-image:
+    linear-gradient(to right, rgba(148, 163, 184, 0.08) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
   background-size: 26px 26px;
   border-radius: 4px;
 }
 
-/* 대시보드 map */
-/* 맵 전체를 감싸는 영역 (카드 안) */
-.agv-map-wrap {
-  width: 93%;
-  /* 카드 높이 비율: 화면 높이의 55~70% 정도에서 맞춰서 써보세요 */
-  box-sizing: border-box;
-}
-
-/* 실제 맵이 그려질 캔버스 */
-.agv-map-bg {
-  width: 100%;
-  height: 100%;
-  border-radius: 4px;
-
-  /* 핵심: 배경 이미지를 가운데에, 비율 유지하면서 맞추기 */
-  background-color: #cfcfcf;        /* 맵 바깥 회색 배경 */
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-size: contain;         /* 전체 지도가 보이게 */
-  /* 만약 카드 꽉 채우고 가장자리는 잘려도 되면 contain 대신 cover */
-}
-
 .agv-path {
   position: absolute;
-  inset: 14px 20px 20px 20px;  /* map-grid랑 같은 영역 */
+  inset: 14px 20px 20px 20px;
   border-radius: 10px;
   border: 1px dashed rgba(148, 163, 184, 0.6);
 }
 
+/* AGV 마커 */
 .agv-node {
   position: absolute;
   width: 10px;
@@ -240,7 +182,6 @@ body {
 }
 
 /* 칩, 상태 리스트 */
-
 .chip-row {
   display: flex;
   gap: 6px;
@@ -286,17 +227,9 @@ body {
   border-radius: 999px;
 }
 
-.dot.green {
-  background: #22c55e;
-}
-
-.dot.yellow {
-  background: #eab308;
-}
-
-.dot.red {
-  background: #ef4444;
-}
+.dot.green { background: #22c55e; }
+.dot.yellow { background: #eab308; }
+.dot.red { background: #ef4444; }
 
 .status-value {
   font-weight: 600;
@@ -304,11 +237,9 @@ body {
 }
 
 /* 미션 카드 */
-
 .card-mission {
   min-height: 150px;
   max-height: 190px;
-  overflow-y: auto;
 }
 
 .mission-list {
@@ -317,6 +248,7 @@ body {
   flex-direction: column;
   gap: 5px;
   font-size: 11px;
+  overflow: auto;
 }
 
 .mission-item {
@@ -335,9 +267,7 @@ body {
   gap: 2px;
 }
 
-.mission-id {
-  font-weight: 600;
-}
+.mission-id { font-weight: 600; }
 
 .mission-meta {
   color: #9ca3af;
@@ -370,10 +300,7 @@ body {
 }
 
 /* 요약 차트 */
-
-.card-summary {
-  min-height: 140px;
-}
+.card-summary { min-height: 140px; }
 
 .chart-col {
   display: flex;
@@ -382,16 +309,10 @@ body {
   margin-top: 6px;
 }
 
-.chart-box {
-  padding: 4px;
-}
+.chart-box { padding: 4px; }
+.chart-caption { margin-bottom: 2px; }
 
-.chart-caption {
-  margin-bottom: 2px;
-}
-
-/* 로그 테이블 공통 */
-
+/* 로그 테이블 */
 .log-table {
   margin-top: 6px;
   font-size: 11px;
@@ -400,75 +321,36 @@ body {
   border: 1px solid rgba(55, 65, 81, 0.9);
 }
 
-/* 로그 내용이 길어질 때 스크롤 */
-.card-events .log-table,
 .card-control .log-table {
-  max-height: 150px;   /* 필요하면 160~180 정도로 조정 */
+  max-height: 150px;
   overflow-y: auto;
 }
 
-
 .log-header,
 .log-row {
   display: grid;
-  grid-template-columns: 70px 60px 1fr;
   align-items: center;
   padding: 4px 8px;
 }
 
-.log-header{
-  text-align: center;
-}
-
-/* 제어 로그 테이블 전용 컬럼 너비 조정 */
 .card-control .log-header,
 .card-control .log-row {
-  grid-template-columns: 70px 110px 90px 70px 1fr;
-  
+  grid-template-columns: 100px 100px 80px 70px 1fr;
 }
 
-/* 이벤트 로그 테이블 전용 컬럼 너비 조정 */
-.card-events .log-header,
-.card-events .log-row {
-  grid-template-columns: 70px 110px 60px 60px  1fr;
-  
-}
-
-
-.log-header,
-.log-row {
-  display: grid;
-  /* 이벤트용 기본 3열, 제어는 밑에서 오버라이드 */
-  grid-template-columns: 70px 60px 1fr;
-  align-items: center;
-  padding: 4px 8px;
-}
-
-/* 헤더를 스크롤 컨테이너 상단에 고정 */
 .log-header {
   position: sticky;
   top: 0;
   z-index: 1;
-  background: #020617; /* 카드 배경이랑 동일하게 */
-  font-weight: 600;
-  color: #9ca3af;
-  border-bottom: 1px solid rgba(55, 65, 81, 0.9);
-}
-
-.log-header {
   background: #020617;
   font-weight: 600;
   color: #9ca3af;
   border-bottom: 1px solid rgba(55, 65, 81, 0.9);
+  text-align: center;
 }
 
-.log-row:nth-child(odd) {
-  background: rgba(15, 23, 42, 0.9);
-}
-
-.log-row:nth-child(even) {
-  background: rgba(15, 23, 42, 0.7);
-}
+.log-row:nth-child(odd) { background: rgba(15, 23, 42, 0.9); }
+.log-row:nth-child(even) { background: rgba(15, 23, 42, 0.7); }
 
 .log-level {
   font-size: 10px;
@@ -495,20 +377,86 @@ body {
   border: 1px solid rgba(239, 68, 68, 0.7);
 }
 
-.log-tag {
-  font-size: 10px;
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.7);
-  margin-right: 6px;
-}
-
 /* 반응형 */
-
 @media (max-width: 1080px) {
   .content {
     grid-template-columns: 1fr;
   }
 }
 
+
+/* 요약 차트(좌/우 어디에 있어도 동일하게) */
+.card-summary .chart-col{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+/* grid 아이템이 줄어들 때 삐져나오는 현상 방지 */
+.card-summary .chart-box{
+  min-width: 0;
+}
+
+/* canvas는 부모 폭을 100% 사용 */
+.card-summary canvas{
+  width: 100% !important;
+  height: 120px !important;  /* 원하는 높이로 조절 */
+  display: block;
+}
+
+/* PLC/ARM 고정 핀 */
+.fixed-pin{
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.18);
+  z-index: 3;
+}
+
+.fixed-pin.plc{ background: #38bdf8; } /* PLC */
+.fixed-pin.arm{ background: #a78bfa; } /* ARM */
+
+.fixed-pin-label{
+  position: absolute;
+  left: 50%;
+  top: -6px;
+  transform: translate(-50%, -120%);
+  white-space: nowrap;
+  font-size: 11px;
+  color: #e5e7eb;
+  background: rgba(15, 23, 42, 0.65);
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+/* 목적지(Goal) 영역 */
+.goal-zone{
+  position: absolute;
+  border-radius: 10px;
+  border: 2px dashed rgba(34, 197, 94, 0.85);
+  background: rgba(34, 197, 94, 0.12);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.10);
+  z-index: 1;
+}
+
+.goal-zone-label{
+  position: absolute;
+  top: -10px;
+  transform: translateY(-100%);
+  font-size: 11px;
+  color: #e5e7eb;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* (선택) 목표지점 색상 다르게 하고 싶으면 */
+.goal-zone.st1{ border-color: rgba(34,197,94,0.9); background: rgba(34,197,94,0.12); }
+.goal-zone.st2{ border-color: rgba(56,189,248,0.9); background: rgba(56,189,248,0.12); }
+.goal-zone.st3{ border-color: rgba(167,139,250,0.9); background: rgba(167,139,250,0.12); }
