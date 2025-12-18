@@ -4,7 +4,8 @@ from flask import Blueprint, request, jsonify
 from app.hardware.opcua.sender import (
     write_amr_go_move,
     write_arm_go_move,
-    write_amr_go_move
+    write_amr_go_move,
+    write_ready_state
 )
 import json
 from app.services.control_log_service import log_control_action
@@ -101,8 +102,33 @@ def amr_mission_state():
                 result_status=amr_status,
                 result_message=amr_msg,
             )
-
+            
             return jsonify({"ok": True, "action": "error_handle"}), 200
+
+        elif status == "UNLODING":
+            # AMR 컨베이어에 하역시작
+            cmd = {"move_command": "conveyor_move"}
+            status = "SUCCESS"
+            msg = None
+
+            try:
+                write_ready_state(cmd)
+            except Exception as e:
+                status = "FAIL"
+                msg = "OPCUA access fail "
+
+            log_control_action(
+                equipment_id="CONVEYOR01",
+                target_type="PLC",
+                action_type="ready_state",
+                operator_name="SYSTEM",        # 자동 제어면 SYSTEM, 수동이면 current_user 등
+                source="API",
+                request_payload=cmd,
+                result_status=status,
+                result_message=msg,
+            )
+
+            return jsonify({"ok": True, "action": "unloading_start"}), 200
 
     except Exception as e:
         print(f"[AMR] amr_mission_state 오류: {e}")

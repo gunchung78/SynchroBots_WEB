@@ -38,7 +38,6 @@ def get_arm_place_logs_for_mission(mission_id: int):
 
     result = []
     for r in rows:
-        print(f"test : {r}")
         result.append({
             "log_arm_id": r.log_arm_id,
             "mission_id": r.mission_id,

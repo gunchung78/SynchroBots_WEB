@@ -154,8 +154,27 @@ def arm_place_single():
         # True가 아닐 경우 아무 동작 안함
         if not value:
             return jsonify({"ok": True, "action": "no_action"}), 200
+
+        cmd = {"move_command": "conveyor_move"}
+        status = "SUCCESS"
+        msg = None
         
-        write_ready_state({"move_command": True})
+        try:
+            write_ready_state(cmd)
+        except Exception as e:
+            status = "FAIL"
+            msg = "OPCUA access fail "
+
+        log_control_action(
+            equipment_id="CONVEYOR01",
+            target_type="PLC",
+            action_type="move_command",
+            operator_name="SYSTEM",        # 자동 제어면 SYSTEM, 수동이면 current_user 등
+            source="API",
+            request_payload=cmd,
+            result_status=status,
+            result_message=msg,
+        )
 
         return jsonify({
             "ok": True,
@@ -194,7 +213,7 @@ def arm_place_completed():
                 arm_equipment_id,
             )
             return jsonify({"ok": False, "error": "no mission for ARM"}), 404
-
+        mission_id = 1064
         # 3) 그 미션에 대한 PLACE 로그 목록 조회
         place_logs = get_arm_place_logs_for_mission(mission_id)
 
@@ -203,11 +222,12 @@ def arm_place_completed():
         for log in place_logs:
             if log.get("result_status") != "SUCCESS":
                 continue
+
             m = log.get("module_type")
             if not m:
                 continue
-            if m not in object_list:
-                object_list.append(m)
+
+            object_list.append(m)
 
         # PLACE 로그가 없거나 유효한 module_type 이 없으면 아무 것도 안 보냄
         if not object_list:
@@ -227,22 +247,22 @@ def arm_place_completed():
         amr_status = "SUCCESS"
         amr_msg = None
 
-        try:
-            write_amr_go_positions(amr_cmd)
-        except Exception as e:
-            amr_status = "FAIL"
-            amr_msg = "OPCUA access fail "
+        # try:
+        #     write_amr_go_positions(amr_cmd)
+        # except Exception as e:
+        #     amr_status = "FAIL"
+        #     amr_msg = "OPCUA access fail "
 
-        log_control_action(
-            equipment_id="AMR01",
-            target_type="AMR",
-            action_type="amr_go_positions",
-            operator_name="SYSTEM",        # 자동 제어면 SYSTEM, 수동이면 current_user 등
-            source="API",
-            request_payload=amr_cmd,
-            result_status=amr_status,
-            result_message=amr_msg,
-        )
+        # log_control_action(
+        #     equipment_id="AMR01",
+        #     target_type="AMR",
+        #     action_type="amr_go_positions",
+        #     operator_name="SYSTEM",        # 자동 제어면 SYSTEM, 수동이면 current_user 등
+        #     source="API",
+        #     request_payload=amr_cmd,
+        #     result_status=amr_status,
+        #     result_message=amr_msg,
+        # )
 
         return jsonify({
             "ok": True,

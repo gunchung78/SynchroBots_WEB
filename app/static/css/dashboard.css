@@ -108,7 +108,7 @@ body {
 .agv-map {
   position: relative;
   width: 600px;
-  height: 400px;
+  height: 330px;
   margin: 4px auto 0;
   border-radius: 12px;
   background: radial-gradient(circle at top left, #1d4ed8 0, #020617 55%);
@@ -117,10 +117,12 @@ body {
   flex: 0 0 auto;
 }
 
-.agv-map-wrap {
+.agv-map-wrap{
   position: absolute;
-  inset: 14px 20px 20px 20px;
+  inset: 14px 20px 20px 20px;  /* <- -30 없애기 */
   box-sizing: border-box;
+  overflow: hidden;             /* 안전장치 */
+  border-radius: 4px;           /* bg 라운드랑 맞추기 */
 }
 
 .agv-map-bg {
@@ -130,7 +132,8 @@ body {
   background-color: #cfcfcf;
   background-repeat: no-repeat;
   background-position: center center;
-  background-size: contain;
+  background-size: 530px 370px;   /* 예전 크기 고정 */
+  background-position: center -60px;
 }
 
 .map-grid {
@@ -239,7 +242,7 @@ body {
 /* 미션 카드 */
 .card-mission {
   min-height: 150px;
-  max-height: 190px;
+  max-height: 315px;
 }
 
 .mission-list {
@@ -300,12 +303,15 @@ body {
 }
 
 /* 요약 차트 */
-.card-summary { min-height: 140px; }
+.card-summary { 
+  min-height: 140px;
+  max-height: 200px;
+}
 
 .chart-col {
   display: flex;
   flex-direction: row;
-  gap: 10px;
+  gap: 0px;
   margin-top: 6px;
 }
 
@@ -322,7 +328,7 @@ body {
 }
 
 .card-control .log-table {
-  max-height: 150px;
+  max-height: 250px;
   overflow-y: auto;
 }
 
@@ -421,8 +427,8 @@ body {
 
 .fixed-pin-label{
   position: absolute;
-  left: 50%;
-  top: -6px;
+  left: 100%;
+  top: 45px;
   transform: translate(-50%, -120%);
   white-space: nowrap;
   font-size: 11px;

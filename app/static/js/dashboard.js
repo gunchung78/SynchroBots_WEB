@@ -379,6 +379,8 @@ async function loadControlLogs() {
 // -------------------- 미션 로그(API) --------------------
 
 function createMissionItem(m) {
+  const status = m.status || "INFO";
+
   const item = document.createElement("div");
   item.className = "mission-item";
 
@@ -391,13 +393,16 @@ function createMissionItem(m) {
 
   const meta = document.createElement("div");
   meta.className = "mission-meta";
-  meta.textContent = `단계: ${m.description || "-"} / 시작: ${(m.created_at ? m.created_at.slice(11, 19) : "")}`;
 
+  if(status == "DONE")
+    meta.textContent = `작업완료 / 완료: ${(m.created_at ? m.created_at.slice(0, 19) : "")}`;
+  else
+     meta.textContent = `단계: ${m.description || "-"} / 시작: ${(m.created_at ? m.created_at.slice(0, 19) : "")}`;
   main.appendChild(id);
   main.appendChild(meta);
 
   const st = document.createElement("div");
-  const status = m.status || "INFO";
+  
   st.className =
     "status-pill " +
     (status === "RUNNING" ? "status-running" : status === "DONE" ? "status-done" : "status-error");
@@ -414,7 +419,7 @@ async function loadMissionLogs() {
   if (!missionList) return;
 
   try {
-    const res = await fetch("/api/v1/dashboard/mission_logs?limit=5");
+    const res = await fetch("/api/v1/dashboard/mission_logs?limit=10");
     if (!res.ok) return console.error("failed to fetch mission_logs", res.status);
 
     const data = await res.json();
@@ -478,15 +483,15 @@ async function loadAmrSummary() {
 
     const name = amr.equipment_name || amr.equipment_id || "AMR";
     const status = (amr.status || "-").toUpperCase();
-    const action = amr.action_type || "-";
+
     const misiion_status = amr.misiion_status || "-";
     const target = amr.target_station || "-";
 
     let location = "-";
     if(misiion_status == "DONE") 
-      location = amr.target_station || "-";
+      location = amr.source_station || "-";
     else
-      location = amr.location || "-";
+      location = amr.source_station || "-";
 
     elMain.textContent = `${name} · ${status}`;
     elTarget.textContent = `목적지: ${target}`;
@@ -682,8 +687,7 @@ function drawAmrMarkers(states) {
 // ✅ 고정 핀 좌표(0~1 비율)만 바꿔서 보정하면 됨
 const FIXED_PINS = [
   // relX, relY는 agv-path 박스 기준 (0~1)
-  { key: "PLC", cls: "plc", relX: 0.50, relY: 0.75 },
-  { key: "ARM", cls: "arm", relX: 0.40, relY: 0.75 },
+  { key: "ARM", cls: "arm", relX: 0.36, relY: 0.72 },
 ];
 
 function drawFixedPins() {
@@ -718,9 +722,10 @@ function drawFixedPins() {
 // ✅ Goal 영역(0~1 비율) 3개 - 숫자만 바꿔서 보정
 const GOAL_ZONES = [
   // relX/Y: 좌상단 기준, relW/H: 폭/높이 (모두 0~1)
-  { key: "ST_ESP32", cls: "st1", relX: 0.17, relY: 0.23, relW: 0.12, relH: 0.12 },
-  { key: "ST_L298N", cls: "st2", relX: 0.43, relY: 0.23, relW: 0.12, relH: 0.12 },
-  { key: "ST_MB102", cls: "st3", relX: 0.70, relY: 0.29, relW: 0.12, relH: 0.12 },
+  { key: "ST_ESP32", cls: "st1", relX: 0.05, relY: 0.08, relW: 0.12, relH: 0.12 },
+  { key: "ST_L298N", cls: "st2", relX: 0.45, relY: 0.08, relW: 0.12, relH: 0.12 },
+  { key: "ST_MB102", cls: "st3", relX: 0.80, relY: 0.16, relW: 0.12, relH: 0.12 },
+  { key: "PLC", cls: "st4", relX: 0.40, relY: 0.70, relW: 0.14, relH: 0.10 },
 ];
 
 function drawGoalZones() {

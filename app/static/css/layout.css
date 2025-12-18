@@ -1,6 +1,8 @@
 /* static/css/layout.css */
 
-/* 전체 기본 */
+/* =========================
+   RESET / BASE
+   ========================= */
 *,
 *::before,
 *::after {
@@ -10,113 +12,117 @@
 html, body {
   margin: 0;
   padding: 0;
-  height: 100%;
+  width: 100%;
+  height: auto;         /* ✅ 고정 높이 제거 */
+  min-height: 100%;
 }
 
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: #020617;
   color: #e5e7eb;
+
+  overflow-y: auto;     /* ✅ 페이지 전체 스크롤 */
+  overflow-x: auto;
 }
 
-/* 전체 레이아웃: 좌측 사이드바 + 우측 메인 */
-.layout {
-  display: flex;
-  min-height: 100vh;
-}
-
-/* 사이드바 */
-.sidebar {
-  width: 230px;                     /* 필요하면 더 줄여도 됨 */
-  background: #020617;
-  border-right: 1px solid rgba(30, 41, 59, 0.9);
-  padding: 10px 10px;
+/* =========================
+   ROOT LAYOUT (Header + Main)
+   ========================= */
+.layout-root {
+  min-height: 100vh;     /* ✅ 내용이 적어도 화면은 채움 */
   display: flex;
   flex-direction: column;
 }
 
+/* 헤더: 고정하지 않음 (기본 흐름) */
+.header {
+  flex: 0 0 auto;
+}
+
+/* 헤더 아래 영역 */
+.layout-main {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  min-height: 0;         /* grid 안정 */
+}
+
+/* =========================
+   SIDEBAR (Menu)
+   ========================= */
+.layout-sidebar {
+  background: #020617;
+  border-right: 1px solid rgba(31, 41, 55, 0.9);
+  padding: 16px 10px;
+
+  /* ✅ body 스크롤 방식에서는 여기 overflow hidden/auto 섞지 않는게 안정적 */
+  overflow: visible;
+}
+
+/* 메뉴 타이틀/섹션 */
 .sidebar-title {
   font-size: 16px;
-  font-weight: 700;
-  margin-bottom: 18px;
+  font-weight: 800;
+  margin: 4px 8px 14px;
+  letter-spacing: -0.2px;
+  opacity: 0.95;
 }
 
 .sidebar-nav {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  padding: 0 6px;
 }
 
+/* 메뉴 링크 */
 .sidebar-link {
-  display: block;
-  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 10px 12px;
   border-radius: 10px;
+
   font-size: 13px;
   color: #e5e7eb;
   text-decoration: none;
+
   background: transparent;
-  transition: background 0.12s ease, color 0.12s ease;
+  border: 1px solid transparent;
+
+  transition: background 0.12s ease, border-color 0.12s ease;
 }
 
 .sidebar-link:hover {
-  background: rgba(30, 64, 175, 0.65);
+  background: rgba(30, 64, 175, 0.45);
+  border-color: rgba(59, 130, 246, 0.35);
 }
 
 .sidebar-link.is-active {
-  background: rgba(37, 99, 235, 0.9);
+  background: rgba(37, 99, 235, 0.88);
+  border-color: rgba(59, 130, 246, 0.55);
 }
 
-/* 기존 .page를 메인 안에서 꽉 차게 쓰도록 조정 */
-.page {
-  max-width: none;               /* 중앙 정렬용 max-width 제거 */
-  margin: 0;                     /* 좌우 여백 제거해서 사이드바와 자연스럽게 이어지게 */
-}
-
-.sidebar-toggle-btn:hover {
-  background: rgba(30, 41, 59, 0.9);
-}
-
-/* ==== 사이드바 숨김 모드 ==== */
 /* =========================
-   전체 레이아웃
+   CONTENT (Right side)
    ========================= */
-
-.layout-root {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* 헤더 아래 영역: 좌측 사이드바 + 우측 컨텐트 */
-.layout-main {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 240px minmax(0, 1fr); /* 사이드바 240px + 나머지 */
-}
-
-/* 좌측 사이드바 */
-.layout-sidebar {
-  overflow: hidden;
-  background: #020617;
-  border-right: 1px solid rgba(31, 41, 55, 0.9);
-  padding: 16px 10px;
-  overflow-y: auto;
-  transition:
-    width 0.2s ease,
-    padding 0.2s ease,
-    opacity 0.2s ease;
-}
-
-/* 우측 메인 컨텐츠 */
 .content {
   padding: 18px 22px 22px;
-  display: grid;
-  grid-template-columns: 1.8fr 1.2fr; /* 원래 dashboard 기본 값 */
-  gap: 18px;
+  min-width: 0;
 }
 
+/* =========================
+   HEADER RIGHT
+   ========================= */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
-/* ==== 사이드바 토글 버튼 ==== */
+/* 토글 버튼 */
 .sidebar-toggle-btn {
   background: rgba(15, 23, 42, 0.9);
   border: 1px solid rgba(148, 163, 184, 0.5);
@@ -125,19 +131,19 @@ body {
   padding: 4px 10px;
   border-radius: 6px;
   cursor: pointer;
-  margin-right: 14px;
+}
+
+.sidebar-toggle-btn:hover {
+  background: rgba(30, 41, 59, 0.9);
 }
 
 /* =========================
-   사이드바 숨기기 토글
+   SIDEBAR HIDDEN MODE
    ========================= */
-
-/* body 에 sidebar-hidden 클래스가 붙으면: 사이드바 폭을 0으로, 컨텐츠는 전체 사용 */
 .sidebar-hidden .layout-main {
   grid-template-columns: 0 minmax(0, 1fr);
 }
 
-/* 실제 사이드바 박스는 안 보이게 + 클릭도 안 되게 */
 .sidebar-hidden .layout-sidebar {
   width: 0;
   padding: 0;
@@ -146,41 +152,23 @@ body {
   border-right: none;
 }
 
-.layout-sidebar, .layout-sidebar * {
-  outline: none !important;
-}
-
-.header-right{
-  display: flex;
-  align-items: center;
-}
-
+/* =========================
+   RESPONSIVE
+   ========================= */
 @media (max-width: 768px) {
+  /* .layout-main {
+    grid-template-columns: 0 minmax(0, 1fr);
+  } */
 
-  .content,
-  .vision-content {
+  /* .layout-sidebar {
+    width: 0;
+    padding: 0;
+    opacity: 0;
+    pointer-events: none;
+    border-right: none;
+  }
+
+  .content {
     padding: 10px 10px 16px;
-    grid-template-columns: 1fr;   /* 한 줄 레이아웃 유지 */
-  }
-
-  .card {
-    padding: 10px 12px;
-    box-shadow: none;             /* 그림자 약하게 하고 싶으면 */
-  }
-
-  /* Vision 요약 차트는 위/아래로 쌓기 */
-  .vision-summary-charts {
-    flex-direction: column;
-  }
-
-  .chart-box {
-    width: 100%;
-    height: 180px;                /* 너무 길지 않게 */
-  }
-
-  /* 상세 이미지 박스 높이도 조금 줄이기 */
-  .vision-image-wrap {
-    min-height: 220px;
-    max-height: 260px;
-  }
+  } */
 }

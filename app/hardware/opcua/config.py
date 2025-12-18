@@ -1,6 +1,6 @@
 # app/hardware/opcua/config.py
 
-OPCUA_SERVER_URL = "opc.tcp://172.30.1.61:0630/freeopcua/server/"
+OPCUA_SERVER_URL = "opc.tcp://172.30.1.61:4840/freeopcua/server/"
 # OPCUA_NAMESPACE_URI = "http://synchrobots.com/interfaces"
 OPCUA_NAMESPACE_URI = "http://examples.freeopcua.github.io"
 

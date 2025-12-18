@@ -301,7 +301,7 @@ def get_mission_logs():
             t.description,
             t.created_at
           FROM (
-            /* ---- AMR: mission_id별 첫 세부로그 ---- */
+            /* ---- AMR: equipment_id별 최신 mission_id 1개 + 그 미션의 최신 amr_log 1개 ---- */
             SELECT
               ml.equipment_id,
               'AMR' AS equipment_type,
@@ -309,33 +309,51 @@ def get_mission_logs():
               ml.status AS status,
               COALESCE(
                 mal.description,
+                mal.action_type,
                 CONCAT(COALESCE(mal.source_station, '-'), ' → ', COALESCE(mal.target_station, '-'))
               ) AS description,
               mal.created_at
             FROM mission_logs ml
+            JOIN (
+              SELECT equipment_id, MAX(mission_id) AS last_mission_id
+              FROM mission_logs
+              GROUP BY equipment_id
+            ) last_ml
+              ON last_ml.equipment_id = ml.equipment_id
+            AND last_ml.last_mission_id = ml.mission_id
             JOIN mission_amr_logs mal
               ON mal.mission_id = ml.mission_id
             WHERE mal.created_at = (
-              SELECT MIN(mal2.created_at)
+              SELECT MAX(mal2.created_at)
               FROM mission_amr_logs mal2
               WHERE mal2.mission_id = ml.mission_id
             )
 
             UNION ALL
 
-            /* ---- ARM: mission_id별 첫 세부로그 ---- */
+            /* ---- ARM: equipment_id별 최신 mission_id 1개 + 그 미션의 최신 arm_log 1개 ---- */
             SELECT
               ml.equipment_id,
               'ARM' AS equipment_type,
-              CONCAT(mrl.action_type, '(', COALESCE(mrl.module_type, ''), ')') AS action_type,
+              CASE
+                WHEN mrl.module_type IS NULL OR mrl.module_type = '' THEN mrl.action_type
+                ELSE CONCAT(mrl.action_type, '(', mrl.module_type, ')')
+              END AS action_type,
               ml.status AS status,
               COALESCE(mrl.description, mrl.target_pose) AS description,
               mrl.created_at
             FROM mission_logs ml
+            JOIN (
+              SELECT equipment_id, MAX(mission_id) AS last_mission_id
+              FROM mission_logs
+              GROUP BY equipment_id
+            ) last_ml
+              ON last_ml.equipment_id = ml.equipment_id
+            AND last_ml.last_mission_id = ml.mission_id
             JOIN mission_robotarm_logs mrl
               ON mrl.mission_id = ml.mission_id
             WHERE mrl.created_at = (
-              SELECT MIN(mrl2.created_at)
+              SELECT MAX(mrl2.created_at)
               FROM mission_robotarm_logs mrl2
               WHERE mrl2.mission_id = ml.mission_id
             )
@@ -350,7 +368,7 @@ def get_mission_logs():
               FROM mission_logs ml
               JOIN mission_amr_logs mal ON mal.mission_id = ml.mission_id
               WHERE mal.created_at = (
-                SELECT MIN(mal2.created_at)
+                SELECT MAX(mal2.created_at)
                 FROM mission_amr_logs mal2
                 WHERE mal2.mission_id = ml.mission_id
               )
@@ -361,7 +379,7 @@ def get_mission_logs():
               FROM mission_logs ml
               JOIN mission_robotarm_logs mrl ON mrl.mission_id = ml.mission_id
               WHERE mrl.created_at = (
-                SELECT MIN(mrl2.created_at)
+                SELECT MAX(mrl2.created_at)
                 FROM mission_robotarm_logs mrl2
                 WHERE mrl2.mission_id = ml.mission_id
               )
@@ -373,7 +391,7 @@ def get_mission_logs():
         ) r
         LEFT JOIN equipment_info ei
           ON ei.equipment_id = r.equipment_id
-        ORDER BY r.created_at DESC
+        ORDER BY r.equipment_id ASC
         LIMIT :limit
         """)
 
@@ -476,12 +494,14 @@ def get_amr_summary():
           e.location,
           mm.target_station,
           mm.action_type,
-          mm.misiion_status
+          mm.misiion_status,
+          mm.source_station
         FROM equipment_info e
         LEFT JOIN (
           SELECT
             m.equipment_id,
             am.target_station,
+            am.source_station,
             am.action_type,
             m.status as misiion_status
           FROM mission_logs m
@@ -504,6 +524,7 @@ def get_amr_summary():
                 "equipment_name": r["equipment_name"],
                 "status": r["status"],              # 예: RUN / IDLE 등 (equipment_info 기준)
                 "location": r["location"],          # 예: PICK-ST01
+                "source_station":r["source_station"],
                 "misiion_status" : r["misiion_status"],
                 "target_station": r["target_station"],  # 예: ST-03
                 "action_type": r["action_type"],        # 예: UNLOADING 등

@@ -84,6 +84,29 @@ def conveyor_sensor_check():
             }
         ), 200
 
+        # ------------------ 4) AMR에 하역(UNLOADING) 명령 회신 ------------------
+      
+        # amr_cmd = {"move_command" : "unloading"}
+        # amr_status = "SUCCESS"
+        # amr_msg = None
+
+        # try:
+        #     write_amr_go_move(amr_cmd)
+        # except Exception as e:
+        #     amr_status = "FAIL"
+        #     amr_msg = "OPCUA access fail "
+
+        # log_control_action(
+        #     equipment_id="AMR01",
+        #     target_type="AMR",
+        #     action_type="amr_go_move",
+        #     operator_name="SYSTEM",        # 자동 제어면 SYSTEM, 수동이면 current_user 등
+        #     source="API",
+        #     request_payload=amr_cmd,
+        #     result_status=amr_status,
+        #     result_message=amr_msg,
+        # )
+
     except Exception as e:
         print(f"[PLC] conveyor_sensor_check 오류: {e}")
         return jsonify({"ok": False, "error": str(e)}), 500

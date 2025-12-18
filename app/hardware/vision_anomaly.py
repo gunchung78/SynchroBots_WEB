@@ -43,6 +43,7 @@ AD_MODEL_PATHS = {
     "ESP32": os.path.join(VISION_DIR, "2_Anomaly Detection", "ESP32", "ESP32_anomaly_detector_best_loss.pth"),
     "L298N": os.path.join(VISION_DIR, "2_Anomaly Detection", "L298N", "L298N_anomaly_detector_best_loss.pth"),
     "MB102": os.path.join(VISION_DIR, "2_Anomaly Detection", "MB102", "MB102_anomaly_detector_best_loss.pth"),
+    
 }
 
 # ⚠ 실제 값은 나중에 다시 튜닝 가능
