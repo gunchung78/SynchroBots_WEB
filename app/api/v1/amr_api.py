@@ -105,7 +105,7 @@ def amr_mission_state():
             
             return jsonify({"ok": True, "action": "error_handle"}), 200
 
-        elif status == "UNLODING":
+        elif status == "UNLOADING":
             # AMR 컨베이어에 하역시작
             cmd = {"move_command": "conveyor_move"}
             status = "SUCCESS"
@@ -126,6 +126,27 @@ def amr_mission_state():
                 request_payload=cmd,
                 result_status=status,
                 result_message=msg,
+            )
+
+            amr_cmd = {"move_command" : "unloading"}
+            amr_status = "SUCCESS"
+            amr_msg = None
+
+            try:
+                write_amr_go_move(amr_cmd)
+            except Exception as e:
+                amr_status = "FAIL"
+                amr_msg = "OPCUA access fail "
+
+            log_control_action(
+                equipment_id="AMR01",
+                target_type="AMR",
+                action_type="amr_go_move",
+                operator_name="SYSTEM",        # 자동 제어면 SYSTEM, 수동이면 current_user 등
+                source="API",
+                request_payload=amr_cmd,
+                result_status=amr_status,
+                result_message=amr_msg,
             )
 
             return jsonify({"ok": True, "action": "unloading_start"}), 200

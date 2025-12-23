@@ -150,7 +150,7 @@ function initCharts() {
           type: "bar",
           label: "평균 신뢰도",
           data: [],
-          yAxisID: "y",
+          yAxisID: "y",          // ✅ 왼쪽 축
           borderWidth: 1,
           categoryPercentage: 0.65,
           barPercentage: 0.55,
@@ -160,7 +160,7 @@ function initCharts() {
           type: "line",
           label: "PASS 비율",
           data: [],
-          yAxisID: "y",
+          yAxisID: "y1",         // ✅ 오른쪽 축
           tension: 0.25,
           fill: false,
           borderWidth: 3,
@@ -171,7 +171,7 @@ function initCharts() {
           type: "line",
           label: "REJECT 비율",
           data: [],
-          yAxisID: "y",
+          yAxisID: "y1",         // ✅ 오른쪽 축
           tension: 0.25,
           fill: false,
           borderWidth: 3,
@@ -198,19 +198,20 @@ function initCharts() {
               const label = ctx.dataset.label || "";
               const v = ctx.parsed.y ?? 0;
 
-              if (ctx.dataset.type === "line") {
-                return `${label}: ${Math.round(v * 100)}%`;
-              }
+              // ✅ 라인(y1)은 %로 표시
+              if (ctx.dataset.type === "line") return `${label}: ${(v).toFixed(1)}`;
+
+              // ✅ 막대(y)은 %로 표시(0~1)
               return `${label}: ${(v * 100).toFixed(1)}%`;
             },
           },
         },
       },
       scales: {
+        // ✅ 왼쪽 축: 막대(평균 신뢰도)
         y: {
           position: "left",
           beginAtZero: true,
-          // ✅ max 제거 → suggestedMax가 실제로 적용되도록
           suggestedMax: 1,
           ticks: {
             color: "#9ca3af",
@@ -219,6 +220,22 @@ function initCharts() {
           },
           grid: { color: "rgba(148,163,184,0.25)" },
         },
+
+        // ✅ 오른쪽 축: 라인(PASS/REJECT)만 30~60%로 확대
+        y1: {
+          position: "right",
+          min: 3,
+          max: 7,
+          ticks: {
+            color: "#9ca3af",
+            font: { size: 10 },
+            callback: (v) => v.toFixed(2),
+          },
+          grid: {
+            drawOnChartArea: false, // ✅ 격자 중복 방지(깔끔)
+          },
+        },
+
         x: {
           ticks: { color: "#9ca3af", font: { size: 10 } },
           grid: { display: false },
@@ -621,12 +638,12 @@ function drawAmrMarkers(states) {
   const cosT = Math.cos(theta);
   const sinT = Math.sin(theta);
 
-  const PIVOT_X = -0.6;
-  const PIVOT_Y = -3;
+  const PIVOT_X = -0.5;
+  const PIVOT_Y = 4.3;
 
-  const SWAP_XY   = true;
+  const SWAP_XY   = false;
   const INVERT_X  = false;
-  const INVERT_Y  = true;
+  const INVERT_Y  = false;
 
   states.forEach((s, idx) => {
     if (typeof s.pos_x !== "number" || typeof s.pos_y !== "number") return;
@@ -644,8 +661,10 @@ function drawAmrMarkers(states) {
 
     const wx = worldX - PIVOT_X;
     const wy = worldY - PIVOT_Y;
-    const rx = wx * cosT - wy * sinT + PIVOT_X;
-    const ry = wx * sinT + wy * cosT + PIVOT_Y;
+    // const rx = wx * cosT - wy * sinT + PIVOT_X;
+    // const ry = wx * sinT + wy * cosT + PIVOT_Y;
+    const rx = wx; 
+    const ry = wy;
 
     const px       = (rx - origin_x) / resolution;
     const py_world = (ry - origin_y) / resolution;
@@ -675,57 +694,20 @@ function drawAmrMarkers(states) {
     label.className = "agv-label";
     label.textContent = s.equipment?.equipment_name ? s.equipment.equipment_name : (s.equipment_id || "");
 
-    node.appendChild(label);
+    // node.appendChild(label);
     wrap.appendChild(node);
   });
 
-  drawFixedPins();  
   drawGoalZones();  
-}
-
-
-// ✅ 고정 핀 좌표(0~1 비율)만 바꿔서 보정하면 됨
-const FIXED_PINS = [
-  // relX, relY는 agv-path 박스 기준 (0~1)
-  { key: "ARM", cls: "arm", relX: 0.36, relY: 0.72 },
-];
-
-function drawFixedPins() {
-  const wrap = document.querySelector(".agv-path");
-  if (!wrap) return;
-
-  const w = wrap.clientWidth;
-  const h = wrap.clientHeight;
-
-  // 기존 핀 제거
-  wrap.querySelectorAll(".fixed-pin").forEach(el => el.remove());
-
-  FIXED_PINS.forEach(p => {
-    const pin = document.createElement("div");
-    pin.className = `fixed-pin ${p.cls}`;
-
-    const x = p.relX * w;
-    const y = p.relY * h;
-
-    pin.style.left = `${x}px`;
-    pin.style.top  = `${y}px`;
-
-    const label = document.createElement("div");
-    label.className = "fixed-pin-label";
-    label.textContent = p.key;
-
-    pin.appendChild(label);
-    wrap.appendChild(pin);
-  });
 }
 
 // ✅ Goal 영역(0~1 비율) 3개 - 숫자만 바꿔서 보정
 const GOAL_ZONES = [
   // relX/Y: 좌상단 기준, relW/H: 폭/높이 (모두 0~1)
-  { key: "ST_ESP32", cls: "st1", relX: 0.05, relY: 0.08, relW: 0.12, relH: 0.12 },
-  { key: "ST_L298N", cls: "st2", relX: 0.45, relY: 0.08, relW: 0.12, relH: 0.12 },
-  { key: "ST_MB102", cls: "st3", relX: 0.80, relY: 0.16, relW: 0.12, relH: 0.12 },
-  { key: "PLC", cls: "st4", relX: 0.40, relY: 0.70, relW: 0.14, relH: 0.10 },
+  { key: "ST_MB102", cls: "st1", relX: 0.15, relY: 0.73, relW: 0.12, relH: 0.14 },
+  { key: "ST_L298N", cls: "st2", relX: 0.43, relY: 0.80, relW: 0.12, relH: 0.14 },
+  { key: "ST_ESP32", cls: "st3", relX: 0.70, relY: 0.80, relW: 0.12, relH: 0.14 },
+  { key: "PLC & RobotArm", cls: "st4", relX: 0.427, relY: 0.055, relW: 0.215, relH: 0.130 },
 ];
 
 function drawGoalZones() {
@@ -748,7 +730,7 @@ function drawGoalZones() {
     el.style.height = `${z.relH * h}px`;
 
     const label = document.createElement("div");
-    label.className = "goal-zone-label";
+    label.className = `goal-zone-label ${z.cls}`;
     label.textContent = z.key;
 
     el.appendChild(label);

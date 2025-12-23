@@ -213,7 +213,6 @@ def arm_place_completed():
                 arm_equipment_id,
             )
             return jsonify({"ok": False, "error": "no mission for ARM"}), 404
-        mission_id = 1064
         # 3) 그 미션에 대한 PLACE 로그 목록 조회
         place_logs = get_arm_place_logs_for_mission(mission_id)
 
@@ -247,22 +246,22 @@ def arm_place_completed():
         amr_status = "SUCCESS"
         amr_msg = None
 
-        # try:
-        #     write_amr_go_positions(amr_cmd)
-        # except Exception as e:
-        #     amr_status = "FAIL"
-        #     amr_msg = "OPCUA access fail "
+        try:
+            write_amr_go_positions(amr_cmd)
+        except Exception as e:
+            amr_status = "FAIL"
+            amr_msg = "OPCUA access fail "
 
-        # log_control_action(
-        #     equipment_id="AMR01",
-        #     target_type="AMR",
-        #     action_type="amr_go_positions",
-        #     operator_name="SYSTEM",        # 자동 제어면 SYSTEM, 수동이면 current_user 등
-        #     source="API",
-        #     request_payload=amr_cmd,
-        #     result_status=amr_status,
-        #     result_message=amr_msg,
-        # )
+        log_control_action(
+            equipment_id="AMR01",
+            target_type="AMR",
+            action_type="amr_go_positions",
+            operator_name="SYSTEM",        # 자동 제어면 SYSTEM, 수동이면 current_user 등
+            source="API",
+            request_payload=amr_cmd,
+            result_status=amr_status,
+            result_message=amr_msg,
+        )
 
         return jsonify({
             "ok": True,

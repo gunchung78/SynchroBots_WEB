@@ -184,7 +184,7 @@ def get_vision_stats():
                 "labels": [],
                 "pass_scores": [],
                 "reject_scores": [],
-                "threshold": 0.55
+                "threshold": 45
             },
             "meta": {
                 "window_type": "recent_days_with_data",
@@ -288,7 +288,7 @@ def get_vision_stats():
             "labels": label_strings,
             "pass_scores": pass_scores,
             "reject_scores": reject_scores,
-            "threshold": 0.55,
+            "threshold": 45,
             "pass_counts": pass_counts,
             "reject_counts": reject_counts,
             "total_counts": total_counts,

@@ -74,7 +74,7 @@ def control_amr():
         cmd = {"move_command": "stop"}
         status_after = "ESTOP"   # ✅ 저장할 equipment_info.status
     elif action_type == "AMR_RESTART":
-        cmd = {"move_command": "restart"}
+        cmd = {"move_command": "go_home"}
         status_after = "RUN"     # ✅ 저장할 equipment_info.status
     else:
         return jsonify(ok=False, error="invalid action_type"), 400

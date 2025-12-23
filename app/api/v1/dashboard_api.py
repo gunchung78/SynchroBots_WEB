@@ -89,7 +89,7 @@ BASE_H = 683
 ZOOM_FACTOR = 1.4
 
 # 기준 ROI (원본 캡처에서 실제 맵 영역)
-BASE_ROI = (260, 230, 500, 440)
+BASE_ROI = (240, 260, 480, 450)
 
 # 🔧 나중에 map.yaml 보고 실제 값으로 바꾸면 됨
 ORIGIN_X = -11.5      # 예시
@@ -552,22 +552,16 @@ def get_dashboard_vision_mixed():
         SELECT
           t.day AS day,
 
+          -- ✅ Bar: 기존 그대로 (신뢰도 평균)
           t.avg_confidence AS avg_confidence,
 
-          CASE
-            WHEN (t.pass_cnt + t.reject_cnt) > 0
-            THEN t.pass_cnt / (t.pass_cnt + t.reject_cnt)
-            ELSE NULL
-          END AS pass_rate,
+          -- ✅ Line: 평균 anomaly_score (PASS/REJECT 각각)
+          t.pass_avg_score AS pass_avg_score,
+          t.reject_avg_score AS reject_avg_score,
 
-          CASE
-            WHEN (t.pass_cnt + t.reject_cnt) > 0
-            THEN t.reject_cnt / (t.pass_cnt + t.reject_cnt)
-            ELSE NULL
-          END AS reject_rate,
-
-          t.total_cnt AS total_cnt,
-          t.pass_cnt  AS pass_cnt,
+          -- meta/tooltip용(원하면 유지)
+          t.total_cnt  AS total_cnt,
+          t.pass_cnt   AS pass_cnt,
           t.reject_cnt AS reject_cnt
 
         FROM (
@@ -578,9 +572,16 @@ def get_dashboard_vision_mixed():
             SUM(mcl.decision = 'PASS')   AS pass_cnt,
             SUM(mcl.decision = 'REJECT') AS reject_cnt,
 
-            AVG(mcl.classification_confidence) AS avg_confidence
+            AVG(mcl.classification_confidence) AS avg_confidence,
+
+            -- ✅ PASS 평균 anomaly_score
+            AVG(CASE WHEN mcl.decision='PASS' THEN mcl.anomaly_score END) AS pass_avg_score,
+
+            -- ✅ REJECT 평균 anomaly_score
+            AVG(CASE WHEN mcl.decision='REJECT' THEN mcl.anomaly_score END) AS reject_avg_score
 
           FROM (
+            -- 기존 로직 유지: 최근 데이터 있는 날짜 N일
             SELECT DATE(created_at) AS day
             FROM mission_camera_logs
             GROUP BY DATE(created_at)
@@ -599,8 +600,8 @@ def get_dashboard_vision_mixed():
 
         labels = []
         avg_conf = []
-        pass_rate = []
-        reject_rate = []
+        pass_avg_score = []
+        reject_avg_score = []
         total_cnt = []
         pass_cnt = []
         reject_cnt = []
@@ -611,8 +612,8 @@ def get_dashboard_vision_mixed():
             labels.append(d)
 
             avg_conf.append(float(r["avg_confidence"]) if r["avg_confidence"] is not None else None)
-            pass_rate.append(float(r["pass_rate"]) if r["pass_rate"] is not None else None)
-            reject_rate.append(float(r["reject_rate"]) if r["reject_rate"] is not None else None)
+            pass_avg_score.append(float(r["pass_avg_score"]) if r["pass_avg_score"] is not None else None)
+            reject_avg_score.append(float(r["reject_avg_score"]) if r["reject_avg_score"] is not None else None)
 
             total_cnt.append(int(r["total_cnt"] or 0))
             pass_cnt.append(int(r["pass_cnt"] or 0))
@@ -622,8 +623,8 @@ def get_dashboard_vision_mixed():
             "chart": {
                 "labels": labels,
                 "avg_confidence": avg_conf,     # bar
-                "pass_rate": pass_rate,         # line1
-                "reject_rate": reject_rate,     # line2
+                "pass_rate": pass_avg_score,         # line1
+                "reject_rate": reject_avg_score,     # line2
                 "counts": {
                     "total": total_cnt,
                     "pass": pass_cnt,
