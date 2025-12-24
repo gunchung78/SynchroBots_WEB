@@ -1,6 +1,7 @@
 # app/api/v1/plc_api.py
 
 from flask import Blueprint, request, jsonify
+import json, time
 import traceback
 from app.hardware.opcua.sender import (
     write_amr_go_move,
@@ -71,7 +72,7 @@ def conveyor_sensor_check():
         write_ok_ng_value({"Anomaly": anomaly_str})
 
 
-
+        time.sleep(10)
         # ------------------ 4) AMR에 하역(UNLOADING) 명령 회신 ------------------
       
         amr_cmd = {"move_command" : "unloading"}

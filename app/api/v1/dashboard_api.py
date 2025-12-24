@@ -50,7 +50,7 @@ def dashboard_stream():
     클라이언트: new EventSource('/api/v1/dashboard/stream')
     3~10초마다 'tick' 이벤트를 보내서 프론트가 각 API를 다시 호출하게 만듦
     """
-    INTERVAL_SEC = 3  # 원하면 3~10 사이에서 조정
+    INTERVAL_SEC = 2  # 원하면 3~10 사이에서 조정
 
     def event_stream():
         # 최초 한 번 연결 확인용

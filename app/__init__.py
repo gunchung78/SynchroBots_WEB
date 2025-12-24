@@ -4,6 +4,7 @@ from flask import Flask
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from config import Config
+import logging
 
 db = SQLAlchemy()
 
@@ -48,5 +49,7 @@ def create_app():
 
     # CORS
     CORS(app)
+
+    logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
     return app
